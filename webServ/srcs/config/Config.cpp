@@ -80,7 +80,7 @@ static ServerConfig parseServerBlock(std::ifstream& configFile)
         }
         else
         {
-            
+
         }
     }
 }

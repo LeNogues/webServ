@@ -23,7 +23,6 @@ class Config
 
             #pragma endregion
 
-
             #pragma region Getter/Setter
             
             std::vector<ServerConfig>& getServers();
@@ -35,7 +34,6 @@ class Config
             void    parseConfig(const std::string& configFilePath);
             
             #pragma endregion
-
 };
 
 #endif
