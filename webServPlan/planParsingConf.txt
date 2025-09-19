@@ -1,0 +1,82 @@
+pour listen :   l adresse ip peut ne pas etre  rempli
+
+pseudo-code :
+
+
+function parse_config_file(filepath):
+    file = open_file(filepath)
+    all_servers = new list<ServerConfig>
+
+    while (line = file.getNextLine()):
+        line = trim(line)
+        if (line is empty OR line.starts_with("#")):
+            continue
+
+        tokens = tokenize(line)
+
+        if (tokens[0] == "server"):
+            if (tokens[1] != "{"):
+                throw error("Syntax Error: 'server' doit être suivi par '{'")
+
+            new_server = parse_server_block(file)
+            all_servers.add(new_server)
+        else:
+            throw error("Syntax Error: Directive inattendue '" + tokens[0] + "' dans le contexte global.")
+
+    if (all_servers is empty):
+        throw error("Error: Le fichier de configuration ne contient aucun bloc 'server'.")
+
+    return all_servers
+
+
+function parse_server_block(file):
+    server_conf = new ServerConfig()
+
+    while (line = file.getNextLine()):
+        line = trim(line)
+        if (line is empty OR line.starts_with("#")):
+            continue
+
+        tokens = tokenize(line)
+
+        if (tokens[0] == "}"):
+            return server_conf
+
+        else if (tokens[0] == "location"):
+            path = tokens[1]
+            if (tokens[2] != "{"):
+                throw error("Syntax Error: 'location' doit être suivi par un chemin et '{'")
+
+            new_location = parse_location_block(file)
+            new_location.path = path
+            server_conf.locations.add(new_location)
+
+        else:
+            key = tokens[0]
+            values = tokens.from_index(1)
+            server_conf.directives.add(key, values)
+
+    throw error("Syntax Error: Fin de fichier inattendue, '}' manquant pour le bloc server.")
+
+
+function parse_location_block(file):
+    location_conf = new LocationConfig()
+
+    while (line = file.getNextLine()):
+        line = trim(line)
+        if (line is empty OR line.starts_with("#")):
+            continue
+
+        tokens = tokenize(line)
+
+        if (tokens[0] == "}"):
+            return location_conf
+
+        else:
+            key = tokens[0]
+            values = tokens.from_index(1)
+            location_conf.directives.add(key, values)
+
+    throw error("Syntax Error: Fin de fichier inattendue, '}' manquant pour le bloc location.")
+
+  

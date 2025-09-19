@@ -1,0 +1,91 @@
+Plan d'Action Étape par Étape et Répartition des Tâches
+
+Ce plan est divisé en phases. À chaque phase, les tâches sont réparties pour que les trois membres de l'équipe puissent travailler en parallèle sur des modules distincts mais complémentaires.
+
+Membres de l'équipe :
+
+    Personne 1 : Le Spécialiste Réseau & I/O (Focus sur le multiplexing, les sockets, la boucle principale)
+
+    Personne 2 : Le Spécialiste Données & Parsing (Focus sur l'analyse du fichier de config et des requêtes HTTP)
+
+    Personne 3 : L'Architecte & Logicien (Focus sur la structure des classes, la logique métier et la génération des réponses)
+
+Phase 0 : Préparation et Fondations (Travail collectif)
+
+    Durée : 1-2 jours
+
+    Objectif : S'assurer que tout le monde est sur la même longueur d'onde.
+
+    Actions :
+
+        Étude du protocole HTTP/1.1 : Lisez la RFC 2616 (ou des versions plus récentes comme la 7230-7235) en vous concentrant sur la structure des requêtes/réponses, les méthodes GET/POST/DELETE, les status codes et les en-têtes principaux (Content-Type, Content-Length, Host, etc.).
+
+        Tests manuels : Utilisez telnet ou nc pour vous connecter à un serveur existant (comme NGINX) et forger des requêtes HTTP à la main. Observez les réponses. telnet google.com 80 puis tapez GET / HTTP/1.1 et Host: google.com suivi de deux retours à la ligne.
+
+        Mise en place de l'environnement : Créez le dépôt Git. Définissez des règles de codage communes. Mettez en place un Makefile de base qui compile avec les flags -Wall -Wextra -Werror -std=c++98.
+
+        Conception initiale : Dessinez sur un tableau blanc l'architecture globale. Quelles classes principales ? Server, Client, Request, Response, ConfigParser, PollManager ? Comment vont-elles interagir ?
+
+Phase 1 : Le Cœur du Serveur - Sockets et Multiplexing
+
+    Durée : 4-5 jours
+
+    Objectif : Avoir un serveur qui accepte des connexions sans se bloquer, mais qui ne comprend pas encore le HTTP.
+
+Tâche	Responsable	Description
+1.1 : Parseur de configuration	Personne 2	Crée une classe qui lit le fichier de configuration. Elle doit extraire les ports, hosts, server_names, et les stocker dans des structures de données claires et accessibles. C'est une tâche de parsing de texte qui peut être faite en isolation.
+1.2 : Mise en place de la boucle de poll()	Personne 1	Crée la boucle principale du programme (while (true)). Initialise les sockets d'écoute sur les ports définis dans la config (socket, setsockopt, bind, listen). Ajoute les descripteurs de ces sockets au gestionnaire poll().
+1.3 : Conception des classes de base	Personne 3	Définit les interfaces des classes Request (pour stocker une requête parsée) et Response (pour construire une réponse). Crée un squelette pour la classe Client qui contiendra le socket du client, ses données de requête/réponse, etc.
+1.4 : Gestion des nouvelles connexions	Personne 1	Dans la boucle poll(), lorsqu'un socket d'écoute est prêt, utilise accept() pour créer un nouveau socket client. Ce nouveau socket doit être passé en mode non-bloquant (fcntl) et ajouté à la liste des descripteurs surveillés par poll().
+
+Point de synchronisation 1 : À la fin de cette phase, Personne 1 et Personne 2 intègrent leur travail. Le serveur doit pouvoir démarrer, lire le fichier de configuration, ouvrir les ports spécifiés et accepter des connexions entrantes sans crasher.
+Phase 2 : Communication HTTP - Parsing de Requête et Réponse Simple
+
+    Durée : 5-7 jours
+
+    Objectif : Lire et comprendre une requête HTTP simple (GET) et y répondre avec une réponse statique.
+
+Tâche	Responsable	Description
+2.1 : Lecture des données du client	Personne 1	Modifie la boucle poll() : quand un socket client est prêt en lecture, utilise recv() pour lire les données dans un buffer associé à ce client. Gère les cas où la lecture est partielle (EAGAIN/EWOULDBLOCK) et les déconnexions.
+2.2 : Parsing de la requête HTTP	Personne 2	Crée une machine à états pour parser le buffer reçu par la Personne 1. Elle doit extraire la méthode, l'URL, la version HTTP, les en-têtes et déterminer si un corps de requête (body) est attendu. Le résultat est stocké dans l'objet Request défini par la Personne 3.
+2.3 : Logique de routage et génération de réponse	Personne 3	Crée la logique qui, à partir d'un objet Request simple, décide quelle réponse envoyer. Pour l'instant, génère une réponse simple (ex: HTTP/1.1 200 OK avec un corps "Hello World"). Crée une méthode qui transforme l'objet Response en une chaîne de caractères brute prête à être envoyée.
+2.4 : Écriture des données vers le client	Personne 1	Lorsque le serveur a une réponse à envoyer, ajoute le socket client à la surveillance en écriture de poll(). Quand le socket est prêt, utilise send() pour envoyer la réponse. Gère les envois partiels : il faudra un buffer d'envoi par client.
+
+Point de synchronisation 2 : L'équipe se réunit pour intégrer les trois modules. Le serveur doit maintenant être capable de recevoir une requête GET / via un navigateur ou curl, de la parser, de construire une réponse "Hello World" et de l'envoyer correctement.
+Phase 3 : Logique Métier - GET, POST, DELETE
+
+    Durée : 7-10 jours
+
+    Objectif : Implémenter les fonctionnalités principales du serveur web.
+
+Tâche	Responsable	Description
+3.1 : Implémentation de GET	Personne 3	Développe la logique pour la méthode GET. En se basant sur la config (racine du site, fichiers par défaut), trouve le fichier demandé. Gère les types MIME (Content-Type), la lecture du fichier, et la génération de pages d'erreur (404 Not Found). Implémente le listage de répertoire.
+3.2 : Implémentation de POST et Upload	Personne 2	Se concentre sur la gestion du corps des requêtes. Lit et assemble le corps de la requête POST (qui peut arriver en plusieurs recv()). Implémente la logique d'upload de fichiers : parse le corps, extrait le fichier et le sauvegarde à l'emplacement défini dans la configuration.
+3.3 : Implémentation de DELETE et gestion des fichiers	Personne 1	Implémente la logique pour la méthode DELETE : vérifie les permissions, trouve le fichier et le supprime. En parallèle, il peut commencer à travailler sur la base de l'exécution du CGI (la partie fork/pipe), car c'est un gros morceau qui nécessite de la concentration.
+Phase 4 : Le CGI (Common Gateway Interface)
+
+    Durée : 5-7 jours
+
+    Objectif : Pouvoir exécuter un script externe (ex: PHP) pour générer des pages dynamiques.
+
+Tâche	Responsable	Description
+4.1 : Exécution du processus CGI	Personne 1	Implémente la logique fork(), pipe(), dup2() et execve(). Crée deux pipes : un pour envoyer le corps de la requête au CGI (server -> CGI) et un pour recevoir la réponse du CGI (CGI -> server). Prépare les méta-variables d'environnement (PATH_INFO, QUERY_STRING, etc.).
+4.2 : Intégration du CGI dans la boucle poll()	Personne 1 & Personne 2 (en binôme)	C'est la partie la plus délicate. Les descripteurs des pipes doivent être ajoutés à poll(). Le serveur doit écrire le corps de la requête dans le pipe d'entrée (de manière non-bloquante) et lire la sortie du CGI depuis le pipe de sortie (aussi de manière non-bloquante), puis la transmettre au client.
+4.3 : Tests et Refactoring	Personne 3	Pendant que les autres se concentrent sur le CGI, cette personne est responsable de la stabilisation du code existant. Elle écrit des scripts de test (en Python, Bash...), refactorise le code pour améliorer la clarté, et s'assure que toutes les pages d'erreur et les cas limites sont bien gérés.
+Phase 5 : Finalisation, Tests et Débogage
+
+    Durée : 5 jours
+
+    Objectif : Assurer la robustesse et la conformité du projet.
+
+    Actions (collectives) :
+
+        Tests intensifs : Utilisez des outils de stress test (siege, ab) pour vérifier que le serveur ne plante pas sous la charge.
+
+        Tests de conformité : Testez avec différents navigateurs (Chrome, Firefox). Utilisez le testeur fourni par l'école. Testez tous les cas d'erreur possibles (fichiers de config invalides, requêtes malformées, etc.).
+
+        Chasse aux fuites de mémoire : Utilisez valgrind pour détecter et corriger toutes les fuites de mémoire.
+
+        Revue de code croisée : Chaque membre relit le code des autres pour trouver des bugs ou des améliorations possibles.
+
+        Nettoyage du Makefile et de la documentation.

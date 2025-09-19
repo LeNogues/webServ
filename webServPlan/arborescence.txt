@@ -1,0 +1,30 @@
+WebServ
+    Srcs
+        segment 1
+            file1.cpp
+            file2.cpp
+            file3.cpp
+        segment 2.cpp
+            file1.cpp
+            file2.cpp
+            file3.cpp
+        segment 3.cpp
+            file1.cpp
+            file2.cpp
+            file3.cpp
+        ...
+    include 
+        segment 1
+            segment1Function.hpp
+            segment1Struct.hpp
+            Segment1Class.hpp
+        segment 2
+            segment2Function.hpp
+            segment2Struct.hpp
+            Segment2Class.hpp
+        segment 3
+            segment3Function.hpp
+            segment3Struct.hpp
+            Segment3Class.hpp
+        ...
+    Makefile

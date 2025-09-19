@@ -1,0 +1,12 @@
+Norme personelle a suivre sur le projet :
+
+Nom de fonction en lowerCamelCase
+Nom de variable en lowerCamelCase
+Nom de clase en UpperCamelCase (comme demander par la norme cpp)
+Nom de variable privee avec _ devant : int _value;
+Pas de fonction C si existe en C++ equivalent
+Maximum de template
+Pas de folder appeler "utils"
+Si fonction utile uniquement dans le scope du fichier, penser a static
+Des que possible, utiliser reference et constante
+
