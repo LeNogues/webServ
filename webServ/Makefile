@@ -1,12 +1,14 @@
-NAME    := webServ
-CC      := c++
-CFLAGS  := -Wall -Wextra -Werror -std=c++98
+NAME	:= webServ
+CC		:= c++
+CFLAGS	:= -Wall -Wextra -Werror -std=c++98
 
 SRC     := 	srcs/main.cpp \
 			srcs/config/Config.cpp \
 			srcs/utils/writeError.cpp \
-			srcs/utils/trim.cpp
-	
+			srcs/utils/trim.cpp \
+			srcs/utils/statusCodes.cpp \
+			srcs/request/parsRequest.cpp
+
 OBJ_DIR := obj
 OBJS    := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 
@@ -18,11 +20,11 @@ $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
 
 debug: $(OBJS)
-	$(CC) $(CFLAGS) -g3 $(OBJS) -o $(NAME) 
+	$(CC) $(CFLAGS) -g3 $(OBJS) -o $(NAME)
 
 # Compile les .cpp en .o dans obj/, en créant les sous-dossiers si nécessaire
 $(OBJ_DIR)/%.o: %.cpp
-	@mkdir -p $(dir $@)  
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:

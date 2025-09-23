@@ -14,7 +14,7 @@
 
 static LocationConfig parseLocationBlock(std::ifstream& configFile, const CommonConfig& parentConfig);
 
-#pragma region Cannonical Class 
+#pragma region Cannonical Class
 
 Config::Config(const std::string& ConfigFilePath)
 {
@@ -41,19 +41,18 @@ Config::~Config()
 
 Config::Config(const Config& other)
 {
-    this->_servers = other._servers;
+	this->_servers = other._servers;
 }
 
 Config& Config::operator=(const Config& other)
 {
-    if (this != &other)
-    {
-        this->_servers = other._servers;
-    }
-    return (*this);
+	if (this != &other)
+	{
+		this->_servers = other._servers;
+	}
+	return (*this);
 }
 
-#pragma endregion
 
 #pragma region Getter/setter
 
@@ -61,21 +60,20 @@ std::vector<ServerConfig>& Config::getServers() { return this->_servers; }
 
 #pragma endregion
 
-#pragma region Member Function
 
 static std::vector<std::string> tokenize(const std::string& line)
 {
-    std::vector<std::string> tokens;
-    std::stringstream ss(line);
-    std::string token;
+	std::vector<std::string> tokens;
+	std::stringstream ss(line);
+	std::string token;
 
-    while (ss >> token)
-        tokens.push_back(token);
-    return tokens;
+	while (ss >> token)
+		tokens.push_back(token);
+	return tokens;
 }
 
 static bool addCommonToken(std::vector<std::string>& tokens, CommonConfig& newConfig);
-    
+
 #pragma region addToken
 
 static void addListen(std::vector<std::string>& tokens, ServerConfig& newServerConfig)
@@ -252,7 +250,7 @@ static void addAlias(std::vector<std::string>& tokens, LocationConfig& newLocati
 
 static void addLocationToken(std::vector<std::string>& tokens, LocationConfig& newLocationConfig)
 {
-    if (addCommonToken(tokens, newLocationConfig)) 
+    if (addCommonToken(tokens, newLocationConfig))
         return;
     else if (tokens[0] == "return")
         addRedirect(tokens, newLocationConfig);
@@ -303,10 +301,10 @@ static LocationConfig parseLocationBlock(std::ifstream& configFile, const Common
 
 static ServerConfig parseServerBlock(std::ifstream& configFile)
 {
-    ServerConfig newServerConfig;
-    std::string line;
-    std::vector<std::string> tokens;
-    std::string path;
+	ServerConfig newServerConfig;
+	std::string line;
+	std::vector<std::string> tokens;
+	std::string path;
 
     while(std::getline(configFile, line))
     {
@@ -361,5 +359,3 @@ void Config::parseConfig(const std::string& configFilePath)
     if (this->_servers.empty())
         throw std::runtime_error("ERROR: config file does not contain any server block");
 }
-
-#pragma endregion
