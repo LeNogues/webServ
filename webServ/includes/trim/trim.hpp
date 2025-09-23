@@ -5,6 +5,6 @@
 
 void ltrim(std::string& s);
 void rtrim(std::string& s);
-void btrim(std::string& s)
+void btrim(std::string& s);
 
 #endif

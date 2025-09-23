@@ -1,11 +1,16 @@
-NAME    := webServ
-CC      := c++
-CFLAGS  := -Wall -Wextra -Werror -std=c++98
+NAME	:= webServ
+CC		:= c++
+CFLAGS	:= -Wall -Wextra -Werror -std=c++98
 
-SRC     := 	src/main.cpp 
-	
-OBJ_DIR := obj
-OBJS    := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
+SRC	:=	srcs/main.cpp \
+		srcs/config/Config.cpp \
+		srcs/error/writeError.cpp \
+		srcs/error/statusCodes.cpp \
+		srcs/request/parsRequest.cpp \
+		srcs/trim.cpp/trim.cpp
+
+OBJ_DIR	:= obj
+OBJS	:= $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 
 # Règles
 
@@ -15,11 +20,11 @@ $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
 
 debug: $(OBJS)
-	$(CC) $(CFLAGS) -g3 $(OBJS) -o $(NAME) 
+	$(CC) $(CFLAGS) -g3 $(OBJS) -o $(NAME)
 
 # Compile les .cpp en .o dans obj/, en créant les sous-dossiers si nécessaire
 $(OBJ_DIR)/%.o: %.cpp
-	@mkdir -p $(dir $@)  
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:

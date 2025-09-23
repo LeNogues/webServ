@@ -4,6 +4,7 @@
 # include <iostream>
 # include <map>
 # include <list>
+# include <vector>
 # include <fstream>
 # include <sstream>
 # include "ServeurConfig.hpp"
@@ -11,29 +12,16 @@
 
 class Config
 {
-    private:
-            std::vector<ServerConfig>   _servers;
-    public:
-            #pragma region Cannonical Class
+	private:
+			std::vector<ServerConfig>	_servers;
+	public:
+			Config(const std::string& configFilePath);
+			~Config();
+			Config(const Config& other);
+			Config& operator=(const Config& other);
 
-            Config(const std::string& configFilePath);
-            ~Config();
-            Config(const Config& other);
-            Config& operator=(const Config& other);
-
-            #pragma endregion
-
-            #pragma region Getter/Setter
-            
-            std::vector<ServerConfig>& getServers();
-            
-            #pragma endregion
-
-            #pragma region MemberFunction
-
-            void    parseConfig(const std::string& configFilePath);
-            
-            #pragma endregion
+			std::vector<ServerConfig>& getServers();
+			void	parseConfig(const std::string& configFilePath);
 };
 
 #endif
