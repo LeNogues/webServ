@@ -4,8 +4,8 @@ CFLAGS  := -Wall -Wextra -Werror -std=c++98
 
 SRC     := 	srcs/main.cpp \
 			srcs/config/Config.cpp \
-			srcs/error/writeError.cpp \
-			srcs/trim/trim.cpp
+			srcs/utils/writeError.cpp \
+			srcs/utils/trim.cpp
 	
 OBJ_DIR := obj
 OBJS    := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
