@@ -10,43 +10,30 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CONFIG_HPP
-# define CONFIG_HPP
+#include <iostream>
 
-# include <iostream>
-# include <map>
-# include <list>
-# include <fstream>
-# include <sstream>
-# include "ServerConfig.hpp"
-# include "../utils/trim.hpp"
+const std::string WHITESPACE = " \n\r\t\f\v";
 
-class Config
+void ltrim(std::string& s)
 {
-    private:
-            std::vector<ServerConfig>   _servers;
-    public:
-            #pragma region Cannonical Class
+    size_t start = s.find_first_not_of(WHITESPACE);
+    if (start == std::string::npos)
+        s.clear();
+    else
+        s.erase(0, start);
+}
 
-            Config(const std::string& configFilePath);
-            ~Config();
-            Config(const Config& other);
-            Config& operator=(const Config& other);
-            Config& operator=(const Config& other);
+void rtrim(std::string& s)
+{
+    size_t end = s.find_last_not_of(WHITESPACE);
+    if (end == std::string::npos)
+        s.clear();
+    else
+        s.erase(end + 1);
+}
 
-            #pragma endregion
-
-            #pragma region Getter/Setter
-            
-            std::vector<ServerConfig>& getServers();
-            
-            #pragma endregion
-
-            #pragma region MemberFunction
-
-            void    parseConfig(const std::string& configFilePath);
-            
-            #pragma endregion
-};
-
-#endif
+void btrim(std::string& s)
+{
+    rtrim(s);
+    ltrim(s);
+}

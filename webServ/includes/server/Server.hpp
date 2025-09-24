@@ -10,43 +10,26 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CONFIG_HPP
-# define CONFIG_HPP
+#ifndef SERVER_HPP
+# define SERVER_HPP
 
 # include <iostream>
-# include <map>
-# include <list>
-# include <fstream>
-# include <sstream>
-# include "ServerConfig.hpp"
-# include "../utils/trim.hpp"
+# include <vector>
+# include "../config/Config.hpp"
+# include  <unistd.h>
 
-class Config
+
+class Server
 {
     private:
-            std::vector<ServerConfig>   _servers;
+            const Config&       _config;
+            std::vector<int>    _listeningSockets;
+ 
     public:
-            #pragma region Cannonical Class
-
-            Config(const std::string& configFilePath);
-            ~Config();
-            Config(const Config& other);
-            Config& operator=(const Config& other);
-            Config& operator=(const Config& other);
-
-            #pragma endregion
-
-            #pragma region Getter/Setter
-            
-            std::vector<ServerConfig>& getServers();
-            
-            #pragma endregion
-
-            #pragma region MemberFunction
-
-            void    parseConfig(const std::string& configFilePath);
-            
-            #pragma endregion
+            Server(const Config& config);
+            ~Server();
+            Server(const Server& other);
+            Server& operator=(const Server& other);
 };
 
 #endif

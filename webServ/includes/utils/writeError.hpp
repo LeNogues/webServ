@@ -10,43 +10,11 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef CONFIG_HPP
-# define CONFIG_HPP
+#ifndef writeError_hpp
+# define writeError_hpp
 
 # include <iostream>
-# include <map>
-# include <list>
-# include <fstream>
-# include <sstream>
-# include "ServerConfig.hpp"
-# include "../utils/trim.hpp"
 
-class Config
-{
-    private:
-            std::vector<ServerConfig>   _servers;
-    public:
-            #pragma region Cannonical Class
-
-            Config(const std::string& configFilePath);
-            ~Config();
-            Config(const Config& other);
-            Config& operator=(const Config& other);
-            Config& operator=(const Config& other);
-
-            #pragma endregion
-
-            #pragma region Getter/Setter
-            
-            std::vector<ServerConfig>& getServers();
-            
-            #pragma endregion
-
-            #pragma region MemberFunction
-
-            void    parseConfig(const std::string& configFilePath);
-            
-            #pragma endregion
-};
+int writeError(std::string str, int returnValue);
 
 #endif

@@ -33,9 +33,9 @@ Phase 1 : Le Cœur du Serveur - Sockets et Multiplexing
     Objectif : Avoir un serveur qui accepte des connexions sans se bloquer, mais qui ne comprend pas encore le HTTP.
 
 Tâche	Responsable	Description
-1.1 : Parseur de configuration	Personne 2	Crée une classe qui lit le fichier de configuration. Elle doit extraire les ports, hosts, server_names, et les stocker dans des structures de données claires et accessibles. C'est une tâche de parsing de texte qui peut être faite en isolation.
+1.1 FAIT : Parseur de configuration	Personne 2	Crée une classe qui lit le fichier de configuration. Elle doit extraire les ports, hosts, server_names, et les stocker dans des structures de données claires et accessibles. C'est une tâche de parsing de texte qui peut être faite en isolation.
 1.2 : Mise en place de la boucle de poll()	Personne 1	Crée la boucle principale du programme (while (true)). Initialise les sockets d'écoute sur les ports définis dans la config (socket, setsockopt, bind, listen). Ajoute les descripteurs de ces sockets au gestionnaire poll().
-1.3 : Conception des classes de base	Personne 3	Définit les interfaces des classes Request (pour stocker une requête parsée) et Response (pour construire une réponse). Crée un squelette pour la classe Client qui contiendra le socket du client, ses données de requête/réponse, etc.
+1.3 EN COURS : Conception des classes de base	Personne 3	Définit les interfaces des classes Request (pour stocker une requête parsée) et Response (pour construire une réponse). Crée un squelette pour la classe Client qui contiendra le socket du client, ses données de requête/réponse, etc.
 1.4 : Gestion des nouvelles connexions	Personne 1	Dans la boucle poll(), lorsqu'un socket d'écoute est prêt, utilise accept() pour créer un nouveau socket client. Ce nouveau socket doit être passé en mode non-bloquant (fcntl) et ajouté à la liste des descripteurs surveillés par poll().
 
 Point de synchronisation 1 : À la fin de cette phase, Personne 1 et Personne 2 intègrent leur travail. Le serveur doit pouvoir démarrer, lire le fichier de configuration, ouvrir les ports spécifiés et accepter des connexions entrantes sans crasher.
