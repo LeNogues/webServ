@@ -7,7 +7,7 @@ void ParsRequest::splitRequest(const std::string& request)
 	size_t	pos = 0;
 
 	if (request.empty() || request.size() < 25 || request.compare(0, 2, "\r\n") == 0)
-		throw HttpException(400);
+		throw HttpStatus(400);
 	pos = request.find("\r\n", start);
 	while(pos != std::string::npos)
 	{
@@ -22,7 +22,7 @@ void ParsRequest::splitRequest(const std::string& request)
 		pos = request.find("\r\n", start);
 	}
 	if (!amptylin || _request.empty() || _request.size() < 2)
-		throw HttpException(400);
+		throw HttpStatus(400);
 	else if (start < request.size())
 	{
 		_haveBody = true;
@@ -41,25 +41,25 @@ void ParsRequest::checkRequest(const std::string& request)
 		if (wordCount == 0)
 		{
 			if (word != "GET" && word != "POST" && word != "DELETE")
-				throw HttpException(405);
+				throw HttpStatus(405);
 			_method = word;
 		}
 		else if (wordCount == 1)
 		{
 			if (word[0] != '/')
-				throw HttpException(400);
+				throw HttpStatus(400);
 			_path = word;
 		}
 		else if (wordCount == 2)
 		{
 			if (word != "HTTP/1.1")
-				throw HttpException(505);
+				throw HttpStatus(505);
 			_protocol = word;
 		}
 		wordCount++;
 	}
 	if (wordCount != 3)
-		throw HttpException(400);
+		throw HttpStatus(400);
 }
 
 void ParsRequest::checkHeaders(const std::vector<std::string>::iterator& begin, const std::vector<std::string>::iterator& end)
@@ -71,10 +71,10 @@ void ParsRequest::checkHeaders(const std::vector<std::string>::iterator& begin, 
 		std::string	value;
 
 		if (it->find('\r') != std::string::npos)
-			throw HttpException(400);
+			throw HttpStatus(400);
 		colonPos = it->find(':');
 		if (colonPos == std::string::npos)
-			throw HttpException(400);
+			throw HttpStatus(400);
 
 		key = it->substr(0, colonPos);
 		value = it->substr(colonPos + 1);
@@ -82,11 +82,11 @@ void ParsRequest::checkHeaders(const std::vector<std::string>::iterator& begin, 
 		btrim(value);
 
 		if (key.empty() || value.empty() || _headers.find(key) != _headers.end())
-			throw HttpException(400);
+			throw HttpStatus(400);
 		_headers[key] = value;
 	}
 	if (_headers.find("Host") == _headers.end())
-		throw HttpException(400);
+		throw HttpStatus(400);
 }
 
 // Constructor

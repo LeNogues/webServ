@@ -6,7 +6,7 @@ SRC     := 	srcs/main.cpp \
 			srcs/config/Config.cpp \
 			srcs/utils/writeError.cpp \
 			srcs/utils/trim.cpp \
-			srcs/utils/statusCodes.cpp \
+			srcs/utils/httpStatus.cpp \
 			srcs/request/parsRequest.cpp
 
 OBJ_DIR := obj

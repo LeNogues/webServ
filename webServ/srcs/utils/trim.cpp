@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <iostream>
+#include "../../includes/utils/trim.hpp"
 
 const std::string WHITESPACE = " \n\r\t\f\v";
 

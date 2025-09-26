@@ -156,13 +156,13 @@
 //     }
 // }
 
+// test request
 int main(int argc, char **argv)
 {
 	if (argc != 2)
 		return (writeError("ERROR: wrong number of argument", 1));
 	try
 	{
-		//Config allServeur(argv[1]);
 		std::string request(argv[1]);
 		ParsRequest response(request);
 		std::cout << "Method: " << response.getMethod() << std::endl;

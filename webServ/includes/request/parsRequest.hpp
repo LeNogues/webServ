@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "../utils/statusCodes.hpp"
+#include "../utils/httpStatus.hpp"
 #include "../utils/trim.hpp"
 
 class ParsRequest
