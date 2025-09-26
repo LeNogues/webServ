@@ -19,9 +19,12 @@ class ParsRequest
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;
 		bool								_haveBody;
+
 		void splitRequest(const std::string& request);
 		void checkRequest(const std::string& request);
 		void checkHeaders(const std::vector<std::string>::iterator& begin, const std::vector<std::string>::iterator& end);
+		void checkKey(void);
+
 	public:
 		ParsRequest(std::string request);
 		ParsRequest(const ParsRequest& other);

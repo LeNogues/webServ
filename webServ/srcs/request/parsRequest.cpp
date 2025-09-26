@@ -21,9 +21,11 @@ void ParsRequest::splitRequest(const std::string& request)
 		start = pos + 2;
 		pos = request.find("\r\n", start);
 	}
-	if (!amptylin || _request.empty() || _request.size() < 2)
+	if (!amptylin || _request.empty() || _request.size() < 2) // check if the request is empty or too short
 		throw HttpStatus(400);
-	else if (start < request.size())
+	else if (_request[0].size() > 8192) // check if the request line is too long
+		throw HttpStatus(414);
+	else if (start < request.size()) // create the body if it exists
 	{
 		_haveBody = true;
 		_request.push_back(request.substr(start));
@@ -41,12 +43,16 @@ void ParsRequest::checkRequest(const std::string& request)
 		if (wordCount == 0)
 		{
 			if (word != "GET" && word != "POST" && word != "DELETE")
+			{
+				if (word == "PUT" || word == "PATCH" || word == "OPTIONS" || word == "CONNECT" || word == "TRACE")
+					throw HttpStatus(501);
 				throw HttpStatus(405);
+			}
 			_method = word;
 		}
 		else if (wordCount == 1)
 		{
-			if (word[0] != '/')
+			if (word[0] != '/' || word.find("..") != std::string::npos)
 				throw HttpStatus(400);
 			_path = word;
 		}
@@ -62,6 +68,33 @@ void ParsRequest::checkRequest(const std::string& request)
 		throw HttpStatus(400);
 }
 
+void ParsRequest::checkKey(void)
+{
+	std::map<std::string, std::string>::iterator	contentLength = _headers.find("Content-Length");
+	std::map<std::string, std::string>::iterator	transferEncoding = _headers.find("Transfer-Encoding");
+	size_t	contentLengthValue = 0;
+
+	if (_headers.find("Host") == _headers.end())
+		throw HttpStatus(400);
+	if ((!_haveBody && (contentLength != _headers.end() || transferEncoding != _headers.end()))
+		|| (contentLength != _headers.end() && transferEncoding != _headers.end()))
+		throw HttpStatus(400);
+	if (_haveBody && contentLength == _headers.end() && transferEncoding == _headers.end())
+		throw HttpStatus(411);
+	if (contentLength != _headers.end())
+	{
+		if (contentLength->second.find_first_not_of("0123456789") != std::string::npos)
+			throw HttpStatus(400);
+		contentLengthValue = std::atoi(contentLength->second.c_str());
+		if (contentLengthValue != _body.size())
+			throw HttpStatus(400);
+	}
+	if (transferEncoding != _headers.end())
+	{
+		if (transferEncoding->second != "chunked")
+			throw HttpStatus(400);
+	}
+}
 void ParsRequest::checkHeaders(const std::vector<std::string>::iterator& begin, const std::vector<std::string>::iterator& end)
 {
 	for (std::vector<std::string>::iterator it = begin; it != end; ++it)
@@ -70,10 +103,10 @@ void ParsRequest::checkHeaders(const std::vector<std::string>::iterator& begin, 
 		std::string	key;
 		std::string	value;
 
-		if (it->find('\r') != std::string::npos)
+		if (it->find('\r') != std::string::npos) // check if the header contains a carriage return
 			throw HttpStatus(400);
 		colonPos = it->find(':');
-		if (colonPos == std::string::npos)
+		if (colonPos == std::string::npos) // check if the header contains a colon
 			throw HttpStatus(400);
 
 		key = it->substr(0, colonPos);
@@ -85,8 +118,7 @@ void ParsRequest::checkHeaders(const std::vector<std::string>::iterator& begin, 
 			throw HttpStatus(400);
 		_headers[key] = value;
 	}
-	if (_headers.find("Host") == _headers.end())
-		throw HttpStatus(400);
+	checkKey(); // check they minimum headers values
 }
 
 // Constructor
@@ -101,8 +133,8 @@ ParsRequest::ParsRequest(std::string request)
 		checkHeaders(_request.begin() + 1, _request.end());
 	else
 	{
-		checkHeaders(_request.begin() + 1, _request.end() - 1);
 		_body = _request.back();
+		checkHeaders(_request.begin() + 1, _request.end() - 1);
 	}
 }
 
@@ -130,8 +162,14 @@ ParsRequest::~ParsRequest()
 }
 
 // Getters
-std::string ParsRequest::getMethod() const{ return this->_method; }
-std::string ParsRequest::getPath() const{ return this->_path; }
-std::string ParsRequest::getProtocol() const{ return this->_protocol; }
-std::map<std::string, std::string> ParsRequest::getHeaders() const{ return this->_headers; }
-std::string ParsRequest::getBody() const{ return this->_body; }
+std::string ParsRequest::getMethod() const{ return _method; }
+std::string ParsRequest::getPath() const{ return _path; }
+std::string ParsRequest::getProtocol() const{ return _protocol; }
+std::map<std::string, std::string> ParsRequest::getHeaders() const{ return _headers; }
+std::string ParsRequest::getBody() const
+{
+	if (_haveBody)
+		return (_body);
+	else
+		return ("");
+}
