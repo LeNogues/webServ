@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "../includes/config/Config.hpp"
-#include "../includes/request/parsRequest.hpp"
+#include "../includes/request/Request.hpp"
 #include "../includes/utils/writeError.hpp"
 
 
@@ -164,7 +164,8 @@ int main(int argc, char **argv)
 	try
 	{
 		std::string request(argv[1]);
-		ParsRequest response(request);
+		Request response;
+		response.parseRequest(request);
 		std::cout << "Method: " << response.getMethod() << std::endl;
 		std::cout << "Path: " << response.getPath() << std::endl;
 		std::cout << "Protocol: " << response.getProtocol() << std::endl;

@@ -7,7 +7,7 @@ SRC     := 	srcs/main.cpp \
 			srcs/utils/writeError.cpp \
 			srcs/utils/trim.cpp \
 			srcs/utils/httpStatus.cpp \
-			srcs/request/parsRequest.cpp
+			srcs/request/Request.cpp
 
 OBJ_DIR := obj
 OBJS    := $(SRC:%.cpp=$(OBJ_DIR)/%.o)

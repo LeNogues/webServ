@@ -9,27 +9,36 @@
 #include "../utils/httpStatus.hpp"
 #include "../utils/trim.hpp"
 
-class ParsRequest
+class Request
 {
 	private:
-		std::vector<std::string>			_request;
+		std::string							_request;
 		std::string							_method;
 		std::string							_path;
 		std::string							_protocol;
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;
+		bool								_haveRequest;
+		bool								_haveHeader;
 		bool								_haveBody;
+		size_t								_contentLength;
+		bool								_isChunked;
 
-		void splitRequest(const std::string& request);
 		void checkRequest(const std::string& request);
-		void checkHeaders(const std::vector<std::string>::iterator& begin, const std::vector<std::string>::iterator& end);
-		void checkKey(void);
+		void splitHeader(size_t end);
+		void checkHeader(void);
 
 	public:
-		ParsRequest(std::string request);
-		ParsRequest(const ParsRequest& other);
-		ParsRequest& operator=(const ParsRequest& other);
-		~ParsRequest();
+		// Constructors
+		Request();
+		Request(const Request& other);
+		Request& operator=(const Request& other);
+		~Request();
+
+		int parseRequest(const std::string& request);
+
+
+		// Getters
 		std::string getMethod() const;
 		std::string getPath() const;
 		std::string getProtocol() const;
