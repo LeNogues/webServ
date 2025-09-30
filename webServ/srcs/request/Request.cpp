@@ -166,11 +166,10 @@ int Request::parseRequest(const std::string& request)
 	{
 		if (!_isChunked)
 		{
-			_body += _request;
-			_request = "";
-			if (_body.size() > _contentLength)
+			if (!_body.empty() || _request.size() != _contentLength)
 				throw HttpStatus(400);
-			// TODO: at the end of the request, check if the body size is equal to the content length
+			_body = _request;
+			_request = "";
 		}
 		else
 		{
