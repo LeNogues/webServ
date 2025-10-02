@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <map>
 
+extern std::map<int, std::string>	STATUS_CODES;
+
 std::map<int, std::string>	initStatusCodes(void);
 std::string	getStatusMessage(int statusCode);
 

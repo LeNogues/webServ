@@ -1,6 +1,6 @@
 #include "../../includes/utils/httpStatus.hpp"
 
-const std::map<int, std::string>	STATUS_CODES = initStatusCodes();
+std::map<int, std::string>	STATUS_CODES = initStatusCodes();
 
 std::map<int, std::string>	initStatusCodes(void)
 {

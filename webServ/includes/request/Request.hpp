@@ -8,6 +8,7 @@
 #include <map>
 #include "../utils/httpStatus.hpp"
 #include "../utils/trim.hpp"
+#include "../utils/strToSizeT.hpp"
 
 class Request
 {
@@ -20,7 +21,9 @@ class Request
 		std::string							_body;
 		bool								_haveRequest;
 		bool								_haveHeader;
+		bool								_bodyNecessary;
 		bool								_haveBody;
+		bool								_haveTrailers;
 		size_t								_contentLength;
 		bool								_isChunked;
 
@@ -36,7 +39,6 @@ class Request
 		~Request();
 
 		int parseRequest(const std::string& request);
-
 
 		// Getters
 		std::string getMethod() const;

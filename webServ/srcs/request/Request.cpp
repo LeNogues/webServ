@@ -69,18 +69,17 @@ void Request::checkHeader(void)
 	std::map<std::string, std::string>::iterator	contentLength = _headers.find("Content-Length");
 	std::map<std::string, std::string>::iterator	transferEncoding = _headers.find("Transfer-Encoding");
 
+	if (_headers.find("Host") == _headers.end())
+		throw HttpStatus(400);
 	if (contentLength != _headers.end() && transferEncoding != _headers.end())
 		throw HttpStatus(400);
 	if (contentLength == _headers.end() && transferEncoding == _headers.end())
-		_haveBody = false;
-	if (!_haveBody && _request.size() > 0)
+		_bodyNecessary = false;
+	if (!_bodyNecessary && _request.size() > 0)
 		throw HttpStatus(411);
 	if (contentLength != _headers.end())
 	{
-		if (contentLength->second.find_first_not_of("0123456789") != std::string::npos)
-			throw HttpStatus(400);
-		_contentLength = std::atoi(contentLength->second.c_str());
-		if (_contentLength != _request.size())
+		if (!strToSizeT(contentLength->second, _contentLength, 10))
 			throw HttpStatus(400);
 	}
 	if (transferEncoding != _headers.end())
@@ -102,7 +101,9 @@ Request::Request()
 	_body = "";
 	_haveRequest = false;
 	_haveHeader = false;
-	_haveBody = true;
+	_bodyNecessary = true;
+	_haveBody = false;
+	_haveTrailers = false;
 	_isChunked = false;
 	_contentLength = 0;
 }
@@ -124,7 +125,9 @@ Request& Request::operator=(const Request& other)
 	this->_body = other._body;
 	this->_haveRequest = other._haveRequest;
 	this->_haveHeader = other._haveHeader;
+	this->_bodyNecessary = other._bodyNecessary;
 	this->_haveBody = other._haveBody;
+	this->_haveTrailers = other._haveTrailers;
 	this->_isChunked = other._isChunked;
 	this->_contentLength = other._contentLength;
 	return *this;
@@ -137,6 +140,10 @@ Request::~Request()
 int Request::parseRequest(const std::string& request)
 {
 	_request += request;
+	if (_haveTrailers || (_haveBody && !_isChunked))
+		throw HttpStatus(400);
+	else if (!_bodyNecessary)
+		throw HttpStatus(411);
 	if (!_haveRequest)
 	{
 		size_t	pos = _request.find("\r\n");
@@ -154,30 +161,71 @@ int Request::parseRequest(const std::string& request)
 		if (pos == std::string::npos)
 			return (0);
 		splitHeader(pos);
-		if (_headers.find("Host") == _headers.end())
-			throw HttpStatus(400);
-		_haveHeader = true;
 		_request = _request.substr(pos + 4);
 		checkHeader();
+		_haveHeader = true;
 		if (_request.empty())
 			return (0);
 	}
-	if (_haveHeader && _haveBody)
+	if (!_haveBody)
 	{
 		if (!_isChunked)
 		{
+			// TODO: check if tcp send all data in one time
 			if (!_body.empty() || _request.size() != _contentLength)
 				throw HttpStatus(400);
 			_body = _request;
 			_request = "";
+			_haveBody = true;
+			return (1);
 		}
 		else
 		{
-			// TODO: parse chunk by chunk, detect 0\r\n and add trailers headers if have content after 0\r\n to \r\n
+			size_t	pos = _request.find("\r\n");
+			if (pos == std::string::npos)
+				return (0);
+			while (pos != std::string::npos)
+			{
+				std::string	chunk, hex;
+				size_t	chunkSize;
+				chunk = _request.substr(0, pos);
+				if (chunk.size() == 1 && chunk == "0")
+				{
+					_request = _request.substr(pos + 2);
+					_haveBody = true;
+					break;
+				}
+				if (chunk.find(";") != std::string::npos)
+					hex = chunk.substr(0, chunk.find(";"));
+				else
+					hex = chunk;
+				if (!strToSizeT(hex, chunkSize, 16))
+					throw HttpStatus(400);
+				if (_request.size() - (chunk.size() + 2) < chunkSize + 2)
+					return (0);
+				if (_request.substr(pos + 2 + chunkSize, 2) != "\r\n")
+					throw HttpStatus(400);
+				_body += _request.substr(pos + 2, chunkSize);
+				_request = _request.substr(pos + 2 + chunkSize + 2);
+				pos = _request.find("\r\n");
+			}
+			if (_request.empty() || !_haveBody)
+				return (0);
 		}
-		return (1);
 	}
-	return (0);
+	if (!_haveTrailers)
+	{
+		// TODO: check potential not detected end
+		size_t	pos = _request.find("\r\n\r\n");
+		if (pos == std::string::npos)
+			return (0);
+		splitHeader(pos);
+		_request = _request.substr(pos + 4);
+		_haveTrailers = true;
+		if (!_request.empty())
+			throw HttpStatus(400);
+	}
+	return (1);
 }
 
 // Getters
