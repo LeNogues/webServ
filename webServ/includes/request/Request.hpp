@@ -1,14 +1,16 @@
 #ifndef PARSREQUEST_HPP
 # define PARSREQUEST_HPP
 
+
+# include "../utils/httpStatus.hpp"
+# include "../utils/strToSizeT.hpp"
+# include "../utils/trim.hpp"
+
 # include <iostream>
 # include <sstream>
 # include <string>
 # include <vector>
 # include <map>
-# include "../utils/httpStatus.hpp"
-# include "../utils/trim.hpp"
-# include "../utils/strToSizeT.hpp"
 
 class Request
 {
@@ -38,8 +40,8 @@ class Request
 		// Getters
 		std::map<std::string, std::string> 	getHeaders()	const;
 		std::string 						getMethod() 	const;
+		std::string 						getPrtcl() 		const;
 		std::string 						getPath() 		const;
-		std::string 						getProtocol() 	const;
 		std::string 						getBody() 		const;
 
 		// Constructors

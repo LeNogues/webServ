@@ -232,7 +232,7 @@ int Request::parseRequest(const std::string& request)
 // Getters
 std::string Request::getMethod() const{ return _method; }
 std::string Request::getPath() const{ return _path; }
-std::string Request::getProtocol() const{ return _protocol; }
+std::string Request::getPrtcl() const{ return _protocol; }
 std::map<std::string, std::string> Request::getHeaders() const{ return _headers; }
 std::string Request::getBody() const
 {
