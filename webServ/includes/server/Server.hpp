@@ -22,14 +22,15 @@
 class Server
 {
     private:
-            const Config&       _config;
-            std::vector<int>    _listeningSockets;
+        std::vector<int>    _listeningSockets;
+        const Config&       _config;
+            
  
     public:
-            Server(const Config& config);
-            ~Server();
-            Server(const Server& other);
-            Server& operator=(const Server& other);
+        Server(const Config& config);
+        ~Server();
+        Server(const Server& other);
+        Server& operator=(const Server& other);
 };
 
 #endif

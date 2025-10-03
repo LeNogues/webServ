@@ -19,31 +19,31 @@
 # include <utility>
 
 struct CommonConfig {
-    std::string                  _root;
-    bool                         _autoIndex;
-    std::string                  _defaultFile;
-    std::vector<std::string>     _allowedMethods;
-    unsigned long                _maxSizeBody;
     std::map<std::string, std::string>      _cgiParams;
-
+    std::vector<std::string>                _allowedMethods;
+    std::string                             _root;
+    std::string                             _defaultFile;
+    unsigned long                           _maxSizeBody;
+    bool                                    _autoIndex;
+    
     CommonConfig() : _autoIndex(false), _maxSizeBody(1000000) {}
 };
 
 struct LocationConfig : public CommonConfig
 {
+    std::map<std::string, LocationConfig>   _locations;
     std::pair<int, std::string>             _redirect;
     std::string                             _uploadStore;
     std::string                             _cgiPass;
     std::string                             _alias;
-    std::map<std::string, LocationConfig>   _locations;
 };
 
 struct ServerConfig : public CommonConfig
 {
-    std::vector< std::pair<std::string, int> >  _listenOn;
-    std::vector<std::string>                    _serverName;
-    std::map<int, std::string>                  _errorPage;
+    std::vector<std::pair<std::string, int>>  _listenOn;
     std::map<std::string, LocationConfig>       _location;
+    std::map<int, std::string>                  _errorPage;
+    std::vector<std::string>                    _serverName;
 };
 
 #endif

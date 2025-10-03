@@ -38,7 +38,7 @@ void Request::checkRequest(const std::string& request)
 		throw HttpStatus(414);
 }
 
-void Request::splitHeader(size_t end)
+void Request::splitHeader(const size_t end)
 {
 	size_t	start = 0;
 	size_t	pos = 0;
@@ -154,6 +154,7 @@ int Request::parseRequest(const std::string& request)
 		_request = _request.substr(pos + 2);
 		if (_request.empty())
 			return (0);
+		return (1);
 	}
 	if (!_haveHeader)
 	{

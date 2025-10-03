@@ -27,13 +27,13 @@ class Config
 	private:
 			std::vector<ServerConfig>	_servers;
 	public:
+			void	parseConfig(const std::string& configFilePath);
+			std::vector<ServerConfig>& getServers();
+
 			Config(const std::string& configFilePath);
 			~Config();
 			Config(const Config& other);
 			Config& operator=(const Config& other);
-
-			std::vector<ServerConfig>& getServers();
-			void	parseConfig(const std::string& configFilePath);
 };
 
 #endif
