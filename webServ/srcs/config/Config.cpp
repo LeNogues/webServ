@@ -31,8 +31,8 @@ Config::Config(const std::string& ConfigFilePath)
             server._allowedMethods.push_back("GET");
             server._allowedMethods.push_back("HEAD");
         }
-        if (server._listenOn.empty())
-            server._listenOn.push_back(std::make_pair("0.0.0.0", 80));
+        if (server._listenOn.first == "")
+            server._listenOn = std::make_pair("0.0.0.0", 80);
     }
 }
 Config::~Config()
@@ -57,6 +57,7 @@ Config& Config::operator=(const Config& other)
 #pragma region Getter/setter
 
 std::vector<ServerConfig>& Config::getServers() { return this->_servers; }
+const std::vector<ServerConfig>& Config::getServers() const { return this->_servers; }
 
 #pragma endregion
 
@@ -80,6 +81,8 @@ static void addListen(std::vector<std::string>& tokens, ServerConfig& newServerC
 {
     if (tokens.size() != 2)
         throw std::runtime_error("ERROR: 'listen' directive needs one argument.");
+    if (newServerConfig._listenOn.first != "")
+        throw std::runtime_error("ERROR: multiple listen");
 
     std::string listenAddress = tokens[1];
     size_t colon_pos = listenAddress.find(':');
@@ -98,7 +101,7 @@ static void addListen(std::vector<std::string>& tokens, ServerConfig& newServerC
     if (ss.fail() || !ss.eof())
         throw std::runtime_error("ERROR: invalid port number in listen directive.");
 
-    newServerConfig._listenOn.push_back(std::make_pair(host, port));
+    newServerConfig._listenOn = std::make_pair(host, port);
 }
 
 static void addServerName(std::vector<std::string>& tokens, ServerConfig& newServerConfig)

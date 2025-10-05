@@ -29,6 +29,7 @@ class Config
 	public:
 			void	parseConfig(const std::string& configFilePath);
 			std::vector<ServerConfig>& getServers();
+			const std::vector<ServerConfig>& getServers() const;
 
 			Config(const std::string& configFilePath);
 			~Config();

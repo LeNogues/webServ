@@ -30,9 +30,18 @@ class Request
 		bool								_isChunked;
 
 		
-		void checkRequest(const std::string& request);
-		void splitHeader(const size_t end);
-		void checkHeader(void);
+		void	checkHeader(void);
+		void	splitHeader(const size_t end);
+		void	addPath(const std::string& word);
+		void	addMethod(const std::string& word);
+		void	addProtocol(const std::string& word);
+		void	checkRequest(const std::string& request);
+		int 	processChunkedRequest();
+		int		validateAndSetBody();
+		int		processRequest();
+		int 	ProcessTrailer();
+		int 	ProcessHeader();
+		
 
 	public:
 		int parseRequest(const std::string& request);

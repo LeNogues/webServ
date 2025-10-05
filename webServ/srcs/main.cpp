@@ -13,24 +13,68 @@
 #include "../includes/config/Config.hpp"
 #include "../includes/request/Request.hpp"
 #include "../includes/utils/writeError.hpp"
+#include "../includes/server/Server.hpp"
 
+#include <iostream>
+#include <vector>
+#include <exception>
+#include <csignal>
 
-// int main(int argc, char **argv)
-// {
-//     if (argc != 2)
-//         return (writeError("ERROR: wrong number of argument", 1));
-//     try
-//     {
-//         Config allServeur(argv[1]);
-//     }
-//     catch(const std::exception& e)
-//     {
-//         std::cerr << e.what() << '\n';
-//         return (1);
-//     }
-//     return (0);
+// volatile sig_atomic_t g_running = 1;
+
+// void signalHandler(int signum) {
+//   (void)signum;
+//   std::cout << "\nSignal d'arrêt reçu. Fermeture des serveurs..." << std::endl;
+//   g_running = 0;
 // }
 
+// int main(int argc, char **argv) {
+//   if (argc != 2) {
+//     std::cerr << "Usage: " << argv[0] << " <config_file_path>" << std::endl;
+//     return 1;
+//   }
+
+//   signal(SIGINT, signalHandler);
+
+//   std::vector<Server *> serverInstances;
+//   try {
+//     Config config(argv[1]);
+//     std::vector<ServerConfig> &servers = config.getServers();
+//     if (servers.empty()) {
+//       std::cerr << "Aucune configuration de serveur trouvée dans " << argv[1] << std::endl;
+//       return 1;
+//     }
+
+//     for (std::vector<ServerConfig>::iterator it = servers.begin();
+//          it != servers.end(); ++it) {
+//       try {
+//         serverInstances.push_back(new Server(*it));
+//         if (!it->_serverName.empty()) {
+//           std::cout << "Serveur " << it->_serverName[0] << " initialisé et à l'écoute sur le port " << it->_listenOn.second << std::endl;
+//         } else {
+//           std::cout << "Un serveur a été initialisé et est à l'écoute sur le port " << it->_listenOn.second << std::endl;
+//         }
+//       } catch (const std::runtime_error &e) {
+//         std::cerr << "Erreur lors de l'initialisation du serveur : " << e.what() << std::endl;
+//       }
+//     }
+
+//     std::cout << "\nTous les serveurs sont en cours d'exécution. Appuyez sur Ctrl+C pour les arrêter." << std::endl;
+
+//     while (g_running) {
+//     }
+
+//   } catch (const std::runtime_error &e) {
+//     std::cerr << "Une erreur est survenue : " << e.what() << std::endl;
+//   }
+
+//   for (size_t i = 0; i < serverInstances.size(); ++i) {
+//     delete serverInstances[i];
+//   }
+//   std::cout << "Toutes les instances de serveur ont été nettoyées. Arrêt." << std::endl;
+
+//   return 0;
+// }
 // static void printCommonConfig(const CommonConfig& config, const std::string& indent);
 // static void printLocations(const std::map<std::string, LocationConfig>& locations, const std::string& indent);
 // int main(int argc, char **argv)
@@ -51,12 +95,12 @@
 //             std::cout << "\n--- Server #" << i + 1 << " ---" << std::endl;
 
 //             // Affichage des directives spécifiques au serveur
-//             if (servers[i]._listenOn.empty()) {
+//             if (servers[i]._listenOn.first == "") {
 //                 std::cout << "  Listen: (none specified, will use default)" << std::endl;
-//             } else {
-//                 for (size_t j = 0; j < servers[i]._listenOn.size(); ++j) {
-//                     std::cout << "  Listen: " << servers[i]._listenOn[j].first << ":" << servers[i]._listenOn[j].second << std::endl;
-//                 }
+//             }
+// 			else
+// 			{
+//                     std::cout << "  Listen: " << servers[i]._listenOn.first << ":" << servers[i]._listenOn.second << std::endl;
 //             }
 
 //             if (!servers[i]._serverName.empty()) {
@@ -94,9 +138,9 @@
 //     return (0);
 // }
 
-// // Définition des fonctions d'aide
+// Définition des fonctions d'aide
 
-// // Affiche les directives de CommonConfig (CORRIGÉ : sans alias)
+// Affiche les directives de CommonConfig (CORRIGÉ : sans alias)
 // static void printCommonConfig(const CommonConfig& config, const std::string& indent)
 // {
 //     if (!config._root.empty())
@@ -168,7 +212,7 @@ int main(int argc, char **argv)
 		response.parseRequest(request);
 		std::cout << "Method: " << response.getMethod() << std::endl;
 		std::cout << "Path: " << response.getPath() << std::endl;
-		std::cout << "Protocol: " << response.getProtocol() << std::endl;
+		std::cout << "Protocol: " << response.getPrtcl() << std::endl;
 		std::map<std::string, std::string> headers = response.getHeaders();
 		std::cout << "Headers: " << headers.size() << std::endl;
 		for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it)

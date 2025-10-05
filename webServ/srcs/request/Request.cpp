@@ -1,5 +1,31 @@
 #include "../../includes/request/Request.hpp"
 
+void Request::addMethod(const std::string&  word)
+{
+	if (word != "GET" && word != "POST" && word != "DELETE")
+	{
+		if (word == "PUT" || word == "PATCH" || word == "OPTIONS" || word == "CONNECT" || word == "TRACE")
+			throw HttpStatus(501);
+		throw HttpStatus(405);
+	}
+	_method = word;
+}
+
+void Request::addPath(const std::string&  word)
+{
+	if (word[0] != '/' || word.find("..") != std::string::npos)
+		throw HttpStatus(400);
+	_path = word;
+}
+
+void Request::addProtocol(const std::string&  word)
+{
+	if (word != "HTTP/1.1")
+		throw HttpStatus(505);
+	_protocol = word;
+}
+
+
 void Request::checkRequest(const std::string& request)
 {
 	std::istringstream	iss(request);
@@ -9,27 +35,11 @@ void Request::checkRequest(const std::string& request)
 	while (iss >> word && wordCount < 3)
 	{
 		if (wordCount == 0)
-		{
-			if (word != "GET" && word != "POST" && word != "DELETE")
-			{
-				if (word == "PUT" || word == "PATCH" || word == "OPTIONS" || word == "CONNECT" || word == "TRACE")
-					throw HttpStatus(501);
-				throw HttpStatus(405);
-			}
-			_method = word;
-		}
+			addMethod(word);
 		else if (wordCount == 1)
-		{
-			if (word[0] != '/' || word.find("..") != std::string::npos)
-				throw HttpStatus(400);
-			_path = word;
-		}
+			addPath(word);
 		else if (wordCount == 2)
-		{
-			if (word != "HTTP/1.1")
-				throw HttpStatus(505);
-			_protocol = word;
-		}
+			addProtocol(word);
 		wordCount++;
 	}
 	if (wordCount != 3)
@@ -137,6 +147,93 @@ Request::~Request()
 {
 }
 
+int Request::processRequest()
+{
+	size_t	pos = _request.find("\r\n");
+	if (pos == std::string::npos)
+		return (0);
+	checkRequest(_request.substr(0, pos));
+	_haveRequest = true;
+	_request = _request.substr(pos + 2);
+	if (_request.empty())
+		return (0);
+	return (1);
+}
+
+int Request::ProcessHeader()
+{
+	size_t	pos = _request.find("\r\n\r\n");
+	if (pos == std::string::npos)
+		return (0);
+	splitHeader(pos);
+	_request = _request.substr(pos + 4);
+	checkHeader();
+	_haveHeader = true;
+	if (_request.empty())
+		return (0);
+	return (1);
+}
+
+int Request::validateAndSetBody()
+{
+	// TODO: check if tcp send all data in one time
+	if (!_body.empty() || _request.size() != _contentLength)
+		throw HttpStatus(400);
+	_body = _request;
+	_request = "";
+	_haveBody = true;
+	return (1);
+}
+
+int Request::processChunkedRequest()
+{
+	size_t	pos = _request.find("\r\n");
+	if (pos == std::string::npos)
+		return (0);
+	while (pos != std::string::npos)
+	{
+		std::string	chunk, hex;
+		size_t	chunkSize;
+		chunk = _request.substr(0, pos);
+		if (chunk.size() == 1 && chunk == "0")
+		{
+			_request = _request.substr(pos + 2);
+			_haveBody = true;
+			break;
+		}
+		if (chunk.find(";") != std::string::npos)
+			hex = chunk.substr(0, chunk.find(";"));
+		else
+			hex = chunk;
+		if (!strToSizeT(hex, chunkSize, 16))
+			throw HttpStatus(400);
+		if (_request.size() - (chunk.size() + 2) < chunkSize + 2)
+			return (0);
+		if (_request.substr(pos + 2 + chunkSize, 2) != "\r\n")
+			throw HttpStatus(400);
+		_body += _request.substr(pos + 2, chunkSize);
+		_request = _request.substr(pos + 2 + chunkSize + 2);
+		pos = _request.find("\r\n");
+	}
+	if (_request.empty() || !_haveBody)
+		return (0);
+	return (1);
+}
+
+int 	Request::ProcessTrailer()
+{
+	// TODO: check potential not detected end
+	size_t	pos = _request.find("\r\n\r\n");
+	if (pos == std::string::npos)
+		return (0);
+	splitHeader(pos);
+	_request = _request.substr(pos + 4);
+	_haveTrailers = true;
+	if (!_request.empty())
+		throw HttpStatus(400);
+	return (1);
+}
+
 int Request::parseRequest(const std::string& request)
 {
 	_request += request;
@@ -144,88 +241,19 @@ int Request::parseRequest(const std::string& request)
 		throw HttpStatus(400);
 	else if (!_bodyNecessary)
 		throw HttpStatus(411);
-	if (!_haveRequest)
-	{
-		size_t	pos = _request.find("\r\n");
-		if (pos == std::string::npos)
-			return (0);
-		checkRequest(_request.substr(0, pos));
-		_haveRequest = true;
-		_request = _request.substr(pos + 2);
-		if (_request.empty())
-			return (0);
-		return (1);
-	}
-	if (!_haveHeader)
-	{
-		size_t	pos = _request.find("\r\n\r\n");
-		if (pos == std::string::npos)
-			return (0);
-		splitHeader(pos);
-		_request = _request.substr(pos + 4);
-		checkHeader();
-		_haveHeader = true;
-		if (_request.empty())
-			return (0);
-	}
+	if (!_haveRequest && !processRequest())
+		return (0);
+	if (!_haveHeader && !ProcessHeader())
+		return (0);
 	if (!_haveBody)
 	{
 		if (!_isChunked)
-		{
-			// TODO: check if tcp send all data in one time
-			if (!_body.empty() || _request.size() != _contentLength)
-				throw HttpStatus(400);
-			_body = _request;
-			_request = "";
-			_haveBody = true;
-			return (1);
-		}
-		else
-		{
-			size_t	pos = _request.find("\r\n");
-			if (pos == std::string::npos)
-				return (0);
-			while (pos != std::string::npos)
-			{
-				std::string	chunk, hex;
-				size_t	chunkSize;
-				chunk = _request.substr(0, pos);
-				if (chunk.size() == 1 && chunk == "0")
-				{
-					_request = _request.substr(pos + 2);
-					_haveBody = true;
-					break;
-				}
-				if (chunk.find(";") != std::string::npos)
-					hex = chunk.substr(0, chunk.find(";"));
-				else
-					hex = chunk;
-				if (!strToSizeT(hex, chunkSize, 16))
-					throw HttpStatus(400);
-				if (_request.size() - (chunk.size() + 2) < chunkSize + 2)
-					return (0);
-				if (_request.substr(pos + 2 + chunkSize, 2) != "\r\n")
-					throw HttpStatus(400);
-				_body += _request.substr(pos + 2, chunkSize);
-				_request = _request.substr(pos + 2 + chunkSize + 2);
-				pos = _request.find("\r\n");
-			}
-			if (_request.empty() || !_haveBody)
-				return (0);
-		}
-	}
-	if (!_haveTrailers)
-	{
-		// TODO: check potential not detected end
-		size_t	pos = _request.find("\r\n\r\n");
-		if (pos == std::string::npos)
+			return (validateAndSetBody());
+		else if (!processChunkedRequest())
 			return (0);
-		splitHeader(pos);
-		_request = _request.substr(pos + 4);
-		_haveTrailers = true;
-		if (!_request.empty())
-			throw HttpStatus(400);
 	}
+	if (!_haveTrailers && !ProcessTrailer())
+		return (0);
 	return (1);
 }
 

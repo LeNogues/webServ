@@ -8,7 +8,8 @@ SRC     := 	srcs/main.cpp \
 			srcs/utils/trim.cpp \
 			srcs/utils/httpStatus.cpp \
 			srcs/utils/strToSizeT.cpp \
-			srcs/request/Request.cpp
+			srcs/request/Request.cpp \
+			srcs/server/Server.cpp
 
 OBJ_DIR := obj
 OBJS    := $(SRC:%.cpp=$(OBJ_DIR)/%.o)

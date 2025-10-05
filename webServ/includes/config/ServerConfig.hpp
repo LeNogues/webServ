@@ -26,7 +26,7 @@ struct CommonConfig {
     unsigned long                           _maxSizeBody;
     bool                                    _autoIndex;
     
-    CommonConfig() : _autoIndex(false), _maxSizeBody(1000000) {}
+    CommonConfig() : _maxSizeBody(1000000), _autoIndex(false) {}
 };
 
 struct LocationConfig : public CommonConfig
@@ -40,8 +40,8 @@ struct LocationConfig : public CommonConfig
 
 struct ServerConfig : public CommonConfig
 {
-    std::vector<std::pair<std::string, int>>  _listenOn;
     std::map<std::string, LocationConfig>       _location;
+    std::pair<std::string, int>                 _listenOn;
     std::map<int, std::string>                  _errorPage;
     std::vector<std::string>                    _serverName;
 };
