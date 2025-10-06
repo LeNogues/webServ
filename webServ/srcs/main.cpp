@@ -14,67 +14,51 @@
 #include "../includes/request/Request.hpp"
 #include "../includes/utils/writeError.hpp"
 #include "../includes/server/Server.hpp"
+#include "../includes/server/WebServer.hpp"
 
 #include <iostream>
 #include <vector>
 #include <exception>
 #include <csignal>
 
-// volatile sig_atomic_t g_running = 1;
+int main(int argc, char **argv)
+{
+    try
+    {
+      if (argc != 2)
+        throw std::runtime_error("ERROR: wrong number of arguments");
+      Config configs(argv[1]);
+      std::vector<ServerConfig>& serversConfigs = configs.getServers();
 
-// void signalHandler(int signum) {
-//   (void)signum;
-//   std::cout << "\nSignal d'arrêt reçu. Fermeture des serveurs..." << std::endl;
-//   g_running = 0;
-// }
+        // 2. Créer UN SEUL objet WebServer qui gère tout
+        WebServer webServer(serversConfigs);
 
-// int main(int argc, char **argv) {
-//   if (argc != 2) {
-//     std::cerr << "Usage: " << argv[0] << " <config_file_path>" << std::endl;
-//     return 1;
-//   }
+        // 3. Initialiser les sockets d'écoute
+        webServer.init();
+        while(1)
+        {
+          
+        }
 
-//   signal(SIGINT, signalHandler);
+        // 4. Lancer la boucle d'événements principale
+        // webServer.run();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+        return 1;
+    }
+    return 0;
+}
 
-//   std::vector<Server *> serverInstances;
-//   try {
-//     Config config(argv[1]);
-//     std::vector<ServerConfig> &servers = config.getServers();
-//     if (servers.empty()) {
-//       std::cerr << "Aucune configuration de serveur trouvée dans " << argv[1] << std::endl;
-//       return 1;
-//     }
 
-//     for (std::vector<ServerConfig>::iterator it = servers.begin();
-//          it != servers.end(); ++it) {
-//       try {
-//         serverInstances.push_back(new Server(*it));
-//         if (!it->_serverName.empty()) {
-//           std::cout << "Serveur " << it->_serverName[0] << " initialisé et à l'écoute sur le port " << it->_listenOn.second << std::endl;
-//         } else {
-//           std::cout << "Un serveur a été initialisé et est à l'écoute sur le port " << it->_listenOn.second << std::endl;
-//         }
-//       } catch (const std::runtime_error &e) {
-//         std::cerr << "Erreur lors de l'initialisation du serveur : " << e.what() << std::endl;
-//       }
-//     }
 
-//     std::cout << "\nTous les serveurs sont en cours d'exécution. Appuyez sur Ctrl+C pour les arrêter." << std::endl;
 
-//     while (g_running) {
-//     }
 
-//   } catch (const std::runtime_error &e) {
-//     std::cerr << "Une erreur est survenue : " << e.what() << std::endl;
-//   }
 
-//   for (size_t i = 0; i < serverInstances.size(); ++i) {
-//     delete serverInstances[i];
-//   }
-//   std::cout << "Toutes les instances de serveur ont été nettoyées. Arrêt." << std::endl;
 
-//   return 0;
-// }
+
+
 // static void printCommonConfig(const CommonConfig& config, const std::string& indent);
 // static void printLocations(const std::map<std::string, LocationConfig>& locations, const std::string& indent);
 // int main(int argc, char **argv)
@@ -200,29 +184,34 @@
 //     }
 // }
 
-// test request
-int main(int argc, char **argv)
-{
-	if (argc != 2)
-		return (writeError("ERROR: wrong number of argument", 1));
-	try
-	{
-		std::string request(argv[1]);
-		Request response;
-		response.parseRequest(request);
-		std::cout << "Method: " << response.getMethod() << std::endl;
-		std::cout << "Path: " << response.getPath() << std::endl;
-		std::cout << "Protocol: " << response.getPrtcl() << std::endl;
-		std::map<std::string, std::string> headers = response.getHeaders();
-		std::cout << "Headers: " << headers.size() << std::endl;
-		for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it)
-			std::cout << "Header: " << it->first << " = " << it->second << std::endl;
-		std::cout << "Body: " << response.getBody() << std::endl;
-	}
-	catch(const std::exception& e)
-	{
-		std::cerr << e.what() << '\n';
-		return (1);
-	}
-	return (0);
-}
+
+
+
+
+
+// // test request
+// int main(int argc, char **argv)
+// {
+// 	if (argc != 2)
+// 		return (writeError("ERROR: wrong number of argument", 1));
+// 	try
+// 	{
+// 		std::string request(argv[1]);
+// 		Request response;
+// 		response.parseRequest(request);
+// 		std::cout << "Method: " << response.getMethod() << std::endl;
+// 		std::cout << "Path: " << response.getPath() << std::endl;
+// 		std::cout << "Protocol: " << response.getPrtcl() << std::endl;
+// 		std::map<std::string, std::string> headers = response.getHeaders();
+// 		std::cout << "Headers: " << headers.size() << std::endl;
+// 		for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it)
+// 			std::cout << "Header: " << it->first << " = " << it->second << std::endl;
+// 		std::cout << "Body: " << response.getBody() << std::endl;
+// 	}
+// 	catch(const std::exception& e)
+// 	{
+// 		std::cerr << e.what() << '\n';
+// 		return (1);
+// 	}
+// 	return (0);
+// }

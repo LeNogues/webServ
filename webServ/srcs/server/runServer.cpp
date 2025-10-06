@@ -10,43 +10,14 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
 
-# include <iostream>
-# include <vector>
-# include <cstdio>
-# include <sstream>
-# include <sys/epoll.h>
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
-# include <fcntl.h>
-# include  <unistd.h>
-# include "../config/ServerConfig.hpp"
+#include "../../includes/server/Server.hpp"
 
-class Server
+
+void    runServer(std::vector<ServerConfig> &servers)
 {
-    private:
-        int                                     _listeningSocket;
-        const ServerConfig&                     _config;
-        int                                     _epollFD;
-        Server(const Server& other);
-        Server& operator=(const Server& other);
-
-
-            
- 
-    public:
-
-        void    runServer();
-
-        Server(const ServerConfig& config);
-        ~Server();
-
-};
-
-
-void    runServer(std::vector<ServerConfig> &servers);
-
-#endif
+    int epoll_fd = epoll_create1(0);
+    if (epoll_fd == -1)
+        throw std::runtime_error("ERROR: can't create epoll instance");
+    
+}

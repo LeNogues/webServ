@@ -10,43 +10,25 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef SERVER_HPP
-# define SERVER_HPP
+#ifndef WEBSERV_HPP
+# define WEBSERV_HPP
 
-# include <iostream>
+# include <map>
 # include <vector>
-# include <cstdio>
-# include <sstream>
-# include <sys/epoll.h>
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
-# include <fcntl.h>
-# include  <unistd.h>
+# include "Server.hpp"
 # include "../config/ServerConfig.hpp"
 
-class Server
+class WebServer
 {
     private:
-        int                                     _listeningSocket;
-        const ServerConfig&                     _config;
-        int                                     _epollFD;
-        Server(const Server& other);
-        Server& operator=(const Server& other);
+        int                                 _epollFD;    
+        std::vector<ServerConfig>&          _servers;
+        std::map<int, const ServerConfig&>  _listeningSockets;
 
-
-            
- 
     public:
-
-        void    runServer();
-
-        Server(const ServerConfig& config);
-        ~Server();
-
+        WebServer(std::vector<ServerConfig>& configs);
+        ~WebServer();
+        void    init();
 };
-
-
-void    runServer(std::vector<ServerConfig> &servers);
 
 #endif
