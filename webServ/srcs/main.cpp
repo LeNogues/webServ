@@ -35,13 +35,10 @@ int main(int argc, char **argv)
 
         // 3. Initialiser les sockets d'écoute
         webServer.init();
-        while(1)
-        {
-          
-        }
+
 
         // 4. Lancer la boucle d'événements principale
-        // webServer.run();
+        webServer.run();
     }
     catch(const std::exception& e)
     {

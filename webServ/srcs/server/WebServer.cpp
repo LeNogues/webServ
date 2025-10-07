@@ -92,3 +92,72 @@ void WebServer::init()
         _listeningSockets.insert(std::make_pair(serverFd, _servers[i]));
     }
 }
+
+void handleNewConnection(int currentFd)
+{
+    (void)currentFd;
+}
+
+void WebServer::handleClientDisconnection(int currentFd)
+{
+    if (epoll_ctl(_epollFD, EPOLL_CTL_DEL, currentFd, NULL) == -1)
+        std::cerr << "Warning: epoll-ctl(DEL) failed for fd : " << currentFd << std::endl;
+    close(currentFd);
+    size_t erased_count = _listeningSockets.erase(currentFd);
+    if (erased_count > 0)
+        std::cout << "Client on fd " << currentFd << " disconnected and cleaned up." << std::endl;
+    else
+        std::cerr << "Warning: tried to erase non-existant client for fd :" << currentFd << std::endl; 
+}
+
+void handleClientWrite(int currentFd)
+{
+    (void)currentFd;
+}
+
+void handleClientRead(int currentFd)
+{
+    (void)currentFd;
+}
+
+void WebServer::run()
+{
+
+    epoll_event events[MAX_EVENTS];
+
+    while(1)
+    {
+        int numEvent = epoll_wait(_epollFD, events, MAX_EVENTS, -1);
+        if (numEvent == -1)
+        {
+            if (errno == EINTR)
+                continue ;
+            else
+            {
+                //pensez a fermer les fd ou faire une classe de catch special
+                throw std::runtime_error("ERROR: erreur critique de epoll_wait");
+            } 
+        }
+
+        for (int i = 0; i < numEvent; ++i)
+        {
+            int currentFd = events[i].data.fd;
+            if (events[i].events == EPOLLERR || events[i].events == EPOLLHUP)
+            {
+                handleClientDisconnection(currentFd);
+                continue ;
+            }
+            //la ligne fait peur mais elle cree juste un iterateur
+            std::map<int, const ServerConfig &, std::less<int>, std::allocator<std::pair<const int, const ServerConfig &> > >::iterator currentServer = _listeningSockets.find(currentFd);
+            if (currentServer == _listeningSockets.end())
+            {
+                if (events[i].events & EPOLLIN)
+                    handleClientRead(currentFd);
+                else if (events[i].events & EPOLLOUT)
+                    handleClientWrite(currentFd);
+            }
+            else
+                handleNewConnection(currentFd);
+        }
+    }
+}
