@@ -54,7 +54,7 @@ static std::string intToString(int intToConvert)
 
 void WebServer::init()
 {
-    _epollFD = epoll_create1(0);
+    _epollFD = epoll_create(MAX_EVENTS);
     if (_epollFD == -1)
         throw std::runtime_error("ERROR:can't create epoll instance");
     
@@ -93,9 +93,42 @@ void WebServer::init()
     }
 }
 
-void handleNewConnection(int currentFd)
+void WebServer::handleNewConnection(int currentFd, const ServerConfig& config)
 {
-    (void)currentFd;
+    while (true)
+    {
+        struct sockaddr_in clientAddress;
+        socklen_t clientAddrLen = sizeof(clientAddress);
+        int clientFd = accept(currentFd, (struct sockaddr*)&clientAddress, &clientAddrLen);
+
+        if (clientFd == -1)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                break; 
+            }
+            else
+            {
+                std::cerr << "Erreur lors de accept()" << std::endl;
+                break;
+            }
+        }
+
+        setNonBlocking(clientFd);
+
+        struct epoll_event event = {};
+        event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
+        event.data.fd = clientFd;
+        if (epoll_ctl(_epollFD, EPOLL_CTL_ADD, clientFd, &event) == -1)
+        {
+            std::cerr << "Erreur: epoll_ctl ne peut pas ajouter le client fd" << std::endl;
+            close(clientFd);
+            continue;
+        }
+
+        _clients.insert(std::make_pair(clientFd, Client(clientFd, config))); // Assurez-vous d'avoir une classe/struct Client
+        std::cout << "Nouvelle connexion acceptée sur le fd: " << clientFd << std::endl;
+    }
 }
 
 void WebServer::handleClientDisconnection(int currentFd)
@@ -110,14 +143,16 @@ void WebServer::handleClientDisconnection(int currentFd)
         std::cerr << "Warning: tried to erase non-existant client for fd :" << currentFd << std::endl; 
 }
 
-void handleClientWrite(int currentFd)
+void WebServer::handleClientWrite(int currentFd)
 {
     (void)currentFd;
+    std::cout << "handleClientWrite fd :" << currentFd << std::endl;
 }
 
-void handleClientRead(int currentFd)
+void WebServer::handleClientRead(int currentFd)
 {
     (void)currentFd;
+    std::cout << "handleClientRead fd :" << currentFd << std::endl;
 }
 
 void WebServer::run()
@@ -157,7 +192,7 @@ void WebServer::run()
                     handleClientWrite(currentFd);
             }
             else
-                handleNewConnection(currentFd);
+                handleNewConnection(currentFd, currentServer->second);
         }
     }
 }

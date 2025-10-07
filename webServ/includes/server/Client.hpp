@@ -10,37 +10,26 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef WEBSERV_HPP
-# define WEBSERV_HPP
 
-# ifndef MAX_EVENTS
-#  define MAX_EVENTS 10
-# endif
+#ifndef CLIENT_HPP
+# define CLIENT_HPP
 
 # include <map>
 # include <vector>
 # include <cerrno>
-# include "Server.hpp"
 # include "../config/ServerConfig.hpp"
-# include "Client.hpp"
 
-class WebServer
+class Client
 {
     private:
-        int                                 _epollFD;    
-        std::vector<ServerConfig>&          _servers;
-        std::map<int, const ServerConfig&>  _listeningSockets;
-        std::map<int, Client>               _clients;
-        void handleClientDisconnection(int currentFd);
-        void handleNewConnection(int currentFd, const ServerConfig& config);
-        void handleClientWrite(int currentFd);
-        void handleClientRead(int currentFd);
+        int                     _clientFd;
+        const ServerConfig&     _config;
+        
 
     public:
-        WebServer(std::vector<ServerConfig>& configs);
-        ~WebServer();
-        void    init();
-        void    run();
+        Client(int clientFd, const ServerConfig& config);
+        ~Client();
 };
+
 
 #endif
