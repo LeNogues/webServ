@@ -28,8 +28,9 @@ class Request
 		bool								_haveBody;
 		bool								_haveTrailers;
 		bool								_isChunked;
+		bool								_isValid;
 
-		
+
 		void	checkHeader(void);
 		void	splitHeader(const size_t end);
 		void	addPath(const std::string& word);
@@ -41,7 +42,7 @@ class Request
 		int		processRequest();
 		int 	ProcessTrailer();
 		int 	ProcessHeader();
-		
+
 
 	public:
 		int parseRequest(const std::string& request);
@@ -52,6 +53,7 @@ class Request
 		std::string 						getPrtcl() 		const;
 		std::string 						getPath() 		const;
 		std::string 						getBody() 		const;
+		bool								getIsValid() const;
 
 		// Constructors
 		Request();

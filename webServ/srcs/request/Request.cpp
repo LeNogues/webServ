@@ -56,11 +56,9 @@ void Request::splitHeader(const size_t end)
 	pos = _request.find("\r\n", start);
 	while(pos <= end)
 	{
-		std::string line = _request.substr(start, pos - start);
-		if (line.find('\r') != std::string::npos)
-			throw HttpStatus(400);
-		size_t colonPos = line.find(':');
-		if (colonPos == std::string::npos)
+		std::string	line = _request.substr(start, pos - start);
+		size_t		colonPos = line.find(':');
+		if (line.find("\r") != std::string::npos || colonPos == std::string::npos)
 			throw HttpStatus(400);
 		std::string key = line.substr(0, colonPos);
 		std::string value = line.substr(colonPos + 1);
@@ -79,72 +77,23 @@ void Request::checkHeader(void)
 	std::map<std::string, std::string>::iterator	contentLength = _headers.find("Content-Length");
 	std::map<std::string, std::string>::iterator	transferEncoding = _headers.find("Transfer-Encoding");
 
-	if (_headers.find("Host") == _headers.end())
-		throw HttpStatus(400);
-	if (contentLength != _headers.end() && transferEncoding != _headers.end())
+	if (_headers.find("Host") == _headers.end() || (contentLength != _headers.end() && transferEncoding != _headers.end()))
 		throw HttpStatus(400);
 	if (contentLength == _headers.end() && transferEncoding == _headers.end())
-		_bodyNecessary = false;
-	if (!_bodyNecessary && _request.size() > 0)
-		throw HttpStatus(411);
-	if (contentLength != _headers.end())
 	{
-		if (!strToSizeT(contentLength->second, _contentLength, 10))
-			throw HttpStatus(400);
+		_bodyNecessary = false;
+		_isValid = true;
 	}
+	else if (!_bodyNecessary && _request.size() > 0)
+		throw HttpStatus(411);
+	if (contentLength != _headers.end() && !strToSizeT(contentLength->second, _contentLength, 10))
+			throw HttpStatus(400);
 	if (transferEncoding != _headers.end())
 	{
 		if (transferEncoding->second != "chunked")
 			throw HttpStatus(400);
 		_isChunked = true;
 	}
-}
-
-// Constructor
-Request::Request()
-{
-	_request = "";
-	_method = "";
-	_path = "";
-	_protocol = "";
-	_headers.clear();
-	_body = "";
-	_haveRequest = false;
-	_haveHeader = false;
-	_bodyNecessary = true;
-	_haveBody = false;
-	_haveTrailers = false;
-	_isChunked = false;
-	_contentLength = 0;
-}
-
-Request::Request(const Request& other)
-{
-	*this = other;
-}
-
-Request& Request::operator=(const Request& other)
-{
-	if (this == &other)
-		return *this;
-	this->_request = other._request;
-	this->_method = other._method;
-	this->_path = other._path;
-	this->_protocol = other._protocol;
-	this->_headers = other._headers;
-	this->_body = other._body;
-	this->_haveRequest = other._haveRequest;
-	this->_haveHeader = other._haveHeader;
-	this->_bodyNecessary = other._bodyNecessary;
-	this->_haveBody = other._haveBody;
-	this->_haveTrailers = other._haveTrailers;
-	this->_isChunked = other._isChunked;
-	this->_contentLength = other._contentLength;
-	return *this;
-}
-
-Request::~Request()
-{
 }
 
 int Request::processRequest()
@@ -176,12 +125,14 @@ int Request::ProcessHeader()
 
 int Request::validateAndSetBody()
 {
-	// TODO: check if tcp send all data in one time
-	if (!_body.empty() || _request.size() != _contentLength)
+	if (_request.size() < _contentLength)
+		return (0);
+	if (_request.size() != _contentLength)
 		throw HttpStatus(400);
 	_body = _request;
 	_request = "";
 	_haveBody = true;
+	_isValid = true;
 	return (1);
 }
 
@@ -231,16 +182,17 @@ int 	Request::ProcessTrailer()
 	_haveTrailers = true;
 	if (!_request.empty())
 		throw HttpStatus(400);
+	_isValid = true;
 	return (1);
 }
 
 int Request::parseRequest(const std::string& request)
 {
 	_request += request;
-	if (_haveTrailers || (_haveBody && !_isChunked))
-		throw HttpStatus(400);
-	else if (!_bodyNecessary)
+	if (!_bodyNecessary)
 		throw HttpStatus(411);
+	else if (_isValid)
+		throw HttpStatus(400);
 	if (!_haveRequest && !processRequest())
 		return (0);
 	if (!_haveHeader && !ProcessHeader())
@@ -268,4 +220,55 @@ std::string Request::getBody() const
 		return (_body);
 	else
 		return ("");
+}
+
+bool Request::getIsValid() const{ return _isValid; }
+
+// Constructor
+Request::Request()
+{
+	_request = "";
+	_method = "";
+	_path = "";
+	_protocol = "";
+	_headers.clear();
+	_body = "";
+	_haveRequest = false;
+	_haveHeader = false;
+	_bodyNecessary = true;
+	_haveBody = false;
+	_haveTrailers = false;
+	_isChunked = false;
+	_contentLength = 0;
+	_isValid = false;
+}
+
+Request::Request(const Request& other)
+{
+	*this = other;
+}
+
+Request& Request::operator=(const Request& other)
+{
+	if (this == &other)
+		return *this;
+	this->_request = other._request;
+	this->_method = other._method;
+	this->_path = other._path;
+	this->_protocol = other._protocol;
+	this->_headers = other._headers;
+	this->_body = other._body;
+	this->_haveRequest = other._haveRequest;
+	this->_haveHeader = other._haveHeader;
+	this->_bodyNecessary = other._bodyNecessary;
+	this->_haveBody = other._haveBody;
+	this->_haveTrailers = other._haveTrailers;
+	this->_isChunked = other._isChunked;
+	this->_contentLength = other._contentLength;
+	this->_isValid = other._isValid;
+	return *this;
+}
+
+Request::~Request()
+{
 }
