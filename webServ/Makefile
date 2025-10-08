@@ -1,6 +1,7 @@
 NAME	:= webServ
 CC		:= c++
 CFLAGS	:= -Wall -Wextra -Werror -std=c++98
+IFLAGS	:= -Iincludes/config -Iincludes/request -Iincludes/server -Iincludes/utils
 
 SRC     := 	srcs/main.cpp \
 			srcs/config/Config.cpp \
@@ -29,7 +30,7 @@ debug: $(OBJS)
 # Compile les .cpp en .o dans obj/, en créant les sous-dossiers si nécessaire
 $(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(IFLAGS) -c $< -o $@
 
 clean:
 	@rm -rf $(OBJ_DIR)

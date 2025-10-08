@@ -36,7 +36,6 @@ int main(int argc, char **argv)
         // 3. Initialiser les sockets d'écoute
         webServer.init();
 
-
         // 4. Lancer la boucle d'événements principale
         webServer.run();
     }

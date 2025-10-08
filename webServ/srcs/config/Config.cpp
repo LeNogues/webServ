@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../includes/config/Config.hpp"
+#include "Config.hpp"
 
 static LocationConfig parseLocationBlock(std::ifstream& configFile, const CommonConfig& parentConfig);
 

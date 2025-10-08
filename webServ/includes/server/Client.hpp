@@ -22,10 +22,9 @@
 class Client
 {
     private:
-        int                     _clientFd;
         const ServerConfig&     _config;
+        int                     _clientFd;
         
-
     public:
         Client(int clientFd, const ServerConfig& config);
         ~Client();

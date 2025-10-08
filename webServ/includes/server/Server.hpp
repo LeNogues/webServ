@@ -13,30 +13,28 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include <iostream>
 # include <vector>
 # include <cstdio>
+# include <fcntl.h>
 # include <sstream>
+# include <iostream>
+# include <unistd.h>
 # include <sys/epoll.h>
+# include <arpa/inet.h>
 # include <sys/socket.h>
 # include <netinet/in.h>
-# include <arpa/inet.h>
-# include <fcntl.h>
-# include  <unistd.h>
 # include "../config/ServerConfig.hpp"
 
 class Server
 {
     private:
-        int                                     _listeningSocket;
         const ServerConfig&                     _config;
+        int                                     _listeningSocket;
         int                                     _epollFD;
+
         Server(const Server& other);
         Server& operator=(const Server& other);
 
-
-            
- 
     public:
 
         void    runServer();

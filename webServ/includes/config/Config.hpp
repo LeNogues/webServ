@@ -27,9 +27,9 @@ class Config
 	private:
 			std::vector<ServerConfig>	_servers;
 	public:
-			void	parseConfig(const std::string& configFilePath);
-			std::vector<ServerConfig>& getServers();
-			const std::vector<ServerConfig>& getServers() const;
+			void								parseConfig(const std::string& configFilePath);
+			std::vector<ServerConfig>& 			getServers();
+			const std::vector<ServerConfig>& 	getServers() const;
 
 			Config(const std::string& configFilePath);
 			~Config();

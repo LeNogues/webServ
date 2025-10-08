@@ -21,26 +21,28 @@
 # include <vector>
 # include <cerrno>
 # include "Server.hpp"
-# include "../config/ServerConfig.hpp"
 # include "Client.hpp"
+# include "../config/ServerConfig.hpp"
 
 class WebServer
 {
-    private:
-        int                                 _epollFD;    
+    private: 
         std::vector<ServerConfig>&          _servers;
         std::map<int, const ServerConfig&>  _listeningSockets;
         std::map<int, Client>               _clients;
-        void handleClientDisconnection(int currentFd);
+        int                                 _epollFD;   
+
         void handleNewConnection(int currentFd, const ServerConfig& config);
+        void handleClientDisconnection(int currentFd);
         void handleClientWrite(int currentFd);
         void handleClientRead(int currentFd);
 
     public:
-        WebServer(std::vector<ServerConfig>& configs);
-        ~WebServer();
         void    init();
         void    run();
+        
+        WebServer(std::vector<ServerConfig>& configs);
+        ~WebServer();
 };
 
 #endif

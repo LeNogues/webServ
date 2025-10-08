@@ -83,7 +83,7 @@ void WebServer::init()
         if (listen(serverFd, SOMAXCONN) < 0)
             errorInit("ERROR: listen failed for ", _servers[i]._serverName[0], serverFd);
 
-        struct epoll_event event = {}; // Initialisation à zéro
+        struct epoll_event event = {};
         event.events = EPOLLIN | EPOLLET;
         event.data.fd = serverFd;
         if (epoll_ctl(_epollFD, EPOLL_CTL_ADD, serverFd, &event) == -1) {
@@ -104,9 +104,7 @@ void WebServer::handleNewConnection(int currentFd, const ServerConfig& config)
         if (clientFd == -1)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
-            {
                 break; 
-            }
             else
             {
                 std::cerr << "Erreur lors de accept()" << std::endl;
@@ -157,7 +155,6 @@ void WebServer::handleClientRead(int currentFd)
 
 void WebServer::run()
 {
-
     epoll_event events[MAX_EVENTS];
 
     while(1)
@@ -182,7 +179,7 @@ void WebServer::run()
                 handleClientDisconnection(currentFd);
                 continue ;
             }
-            //la ligne fait peur mais elle cree juste un iterateur
+            //la ligne fait peur mais elle cree juste un iterateur, panique pas bebou
             std::map<int, const ServerConfig &, std::less<int>, std::allocator<std::pair<const int, const ServerConfig &> > >::iterator currentServer = _listeningSockets.find(currentFd);
             if (currentServer == _listeningSockets.end())
             {
