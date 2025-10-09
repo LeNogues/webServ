@@ -13,14 +13,15 @@
 #ifndef CONFIG_HPP
 # define CONFIG_HPP
 
-# include <iostream>
+# include "../utils/trim.hpp"
+
 # include <map>
 # include <list>
 # include <vector>
 # include <fstream>
 # include <sstream>
+# include <iostream>
 # include "ServerConfig.hpp"
-# include "../utils/trim.hpp"
 
 class Config
 {

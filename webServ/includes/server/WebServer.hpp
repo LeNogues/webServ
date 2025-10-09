@@ -23,6 +23,7 @@
 # include "Server.hpp"
 # include "Client.hpp"
 # include "../config/ServerConfig.hpp"
+# include "../request/Request.hpp"
 
 class WebServer
 {
@@ -33,9 +34,13 @@ class WebServer
         int                                 _epollFD;   
 
         void handleNewConnection(int currentFd, const ServerConfig& config);
+        void setServerAdress(const int& serverFd, sockaddr_in& serverAdress, size_t i);
         void handleClientDisconnection(int currentFd);
         void handleClientWrite(int currentFd);
         void handleClientRead(int currentFd);
+        void switchToWrite(int clientFd);
+        void switchToRead(int clientFd);
+        
 
     public:
         void    init();

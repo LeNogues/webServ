@@ -14,7 +14,7 @@
 
 
 Client::Client(int clientFd, const ServerConfig& config)
-    : _clientFd(clientFd), _config(config)
+    : _config(config), _clientFd(clientFd)
 {
     (void)_clientFd;
     (void)_config;
@@ -22,4 +22,20 @@ Client::Client(int clientFd, const ServerConfig& config)
 
 Client::~Client()
 {
+}
+
+
+std::string Client::getRawRequest()
+{
+    return (_rawRequest);
+}
+
+Request Client::getRequest()
+{
+    return (_request);
+}
+
+void Client::injectIntoRawRequest(std::string partialRequest)
+{
+    _rawRequest += partialRequest;
 }

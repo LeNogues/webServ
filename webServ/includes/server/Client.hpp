@@ -14,20 +14,28 @@
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 
+# include "../config/ServerConfig.hpp"
+# include "../request/Request.hpp"
+
 # include <map>
 # include <vector>
 # include <cerrno>
-# include "../config/ServerConfig.hpp"
 
 class Client
 {
     private:
         const ServerConfig&     _config;
+        std::string             _rawRequest;
+        Request                 _request;
         int                     _clientFd;
+        
         
     public:
         Client(int clientFd, const ServerConfig& config);
         ~Client();
+        void injectIntoRawRequest(std::string partialRequest);
+        std::string getRawRequest();
+        Request getRequest();
 };
 
 

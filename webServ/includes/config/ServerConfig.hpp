@@ -13,10 +13,10 @@
 #ifndef SERVERCONFIG_HPP
 # define SERVERCONFIG_HPP
 
-# include <vector>
-# include <iostream>
 # include <map>
+# include <vector>
 # include <utility>
+# include <iostream>
 
 struct CommonConfig {
     std::map<std::string, std::string>      _cgiParams;

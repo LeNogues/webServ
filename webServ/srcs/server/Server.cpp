@@ -32,7 +32,7 @@ Server::~Server()
 }
 
 Server::Server(const Server& other) 
-    : _listeningSocket(other._listeningSocket), _config(other._config) 
+    : _config(other._config), _listeningSocket(other._listeningSocket) 
 {
 
 }
