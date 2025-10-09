@@ -12,7 +12,8 @@ SRC     := 	srcs/main.cpp \
 			srcs/request/Request.cpp \
 			srcs/server/Server.cpp \
 			srcs/server/WebServer.cpp \
-			srcs/server/Client.cpp
+			srcs/server/Client.cpp \
+			srcs/request/Response.cpp
 
 OBJ_DIR := obj
 OBJS    := $(SRC:%.cpp=$(OBJ_DIR)/%.o)

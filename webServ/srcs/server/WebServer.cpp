@@ -36,7 +36,7 @@ static void setNonBlocking(int serverFD)
     int flags = fcntl(serverFD, F_GETFL, 0);
     if (flags == -1)
         throw std::runtime_error("ERROR: fcntl failed");
-    
+
     flags |= O_NONBLOCK;
     int s = fcntl(serverFD, F_SETFL, flags);
     if (s == -1)
@@ -66,7 +66,7 @@ void WebServer::init()
     _epollFD = epoll_create(MAX_EVENTS);
     if (_epollFD == -1)
         throw std::runtime_error("ERROR:can't create epoll instance");
-    
+
     for (size_t i = 0; i < _servers.size(); ++i)
     {
         int serverFd = socket(AF_INET, SOCK_STREAM, 0);
@@ -84,7 +84,7 @@ void WebServer::init()
             errorInit("ERROR: failed to bind to port ", intToString(_servers[i]._listenOn.second), serverFd);
 
         setNonBlocking(serverFd);
-        
+
         if (listen(serverFd, SOMAXCONN) < 0)
             errorInit("ERROR: listen failed for ", _servers[i]._serverName[0], serverFd);
 
@@ -109,7 +109,7 @@ void WebServer::handleNewConnection(int currentFd, const ServerConfig& config)
         if (clientFd == -1)
         {
             if (errno == EAGAIN || errno == EWOULDBLOCK)
-                break; 
+                break;
             else
             {
                 std::cerr << "Erreur lors de accept()" << std::endl;
@@ -143,7 +143,7 @@ void WebServer::handleClientDisconnection(int currentFd)
     if (erased_count > 0)
         std::cout << "Client on fd " << currentFd << " disconnected and cleaned up." << std::endl;
     else
-        std::cerr << "Warning: tried to erase non-existant client for fd :" << currentFd << std::endl; 
+        std::cerr << "Warning: tried to erase non-existant client for fd :" << currentFd << std::endl;
 }
 
 void WebServer::handleClientWrite(int currentFd)
@@ -161,7 +161,7 @@ void WebServer::switchToRead(int clientFd)
 
     if (epoll_ctl(_epollFD, EPOLL_CTL_MOD, clientFd, &event) == -1)
     {
-        std::cerr << "ERROR: can't change epoll for write request on fd : " << clientFd << std::endl; 
+        std::cerr << "ERROR: can't change epoll for write request on fd : " << clientFd << std::endl;
         handleClientDisconnection(clientFd);
     }
 }
@@ -174,7 +174,7 @@ void WebServer::switchToWrite(int clientFd)
 
     if (epoll_ctl(_epollFD, EPOLL_CTL_MOD, clientFd, &event) == -1)
     {
-        std::cerr << "ERROR: can't change epoll for write request on fd : " << clientFd << std::endl; 
+        std::cerr << "ERROR: can't change epoll for write request on fd : " << clientFd << std::endl;
         handleClientDisconnection(clientFd);
     }
 }
@@ -190,40 +190,41 @@ void WebServer::handleClientRead(int currentFd)
         return;
     }
 
-    Client& currentClient = it->second;
-    char buffer[4096];
-    ssize_t bytes_read;
-
-    while (true)
-    {
-        bytes_read = recv(currentFd, buffer, sizeof(buffer), 0);
-
-        if (bytes_read > 0)
-            currentClient.injectIntoRawRequest(std::string(buffer, bytes_read));
-        else if (bytes_read == 0)
-        {
-            std::cout << "Client on fd " << currentFd << " closed the connection." << std::endl;
-            handleClientDisconnection(currentFd);
-            return;
-        }
-        else
-            break;
-    }
-    std::cout << "Request received on fd " << currentFd << ", total size: " << currentClient.getRawRequest().length() << " bytes." << std::endl;
-    std::cout << "\n--- Raw Request Start ---" << std::endl;
-    std::cout << currentClient.getRawRequest() << std::endl;
-    std::cout << "--- Raw Request End ---n" << std::endl;
-
     try
     {
-        if (currentClient.getRequest().parseRequest(currentClient.getRawRequest()) != 0)
-            switchToWrite(currentFd);
+        Client& currentClient = it->second;
+        char buffer[4096];
+        ssize_t bytes_read;
+
+        std::cout << "Request received on fd " << currentFd << std::endl;
+        std::cout << "\n--- Request Start ---" << std::endl;
+        while (true)
+        {
+            bytes_read = recv(currentFd, buffer, sizeof(buffer), 0);
+
+            if (bytes_read > 0)
+            {
+                currentClient.getRequest().parseRequest(std::string(buffer, bytes_read));
+            }
+            else if (bytes_read == 0)
+            {
+                std::cout << "Client on fd " << currentFd << " closed the connection." << std::endl;
+                handleClientDisconnection(currentFd);
+                return;
+            }
+            else
+                break;
+        }
+        currentClient.getRequest().logRequest();
+        std::cout << "\n--- Request End ---" << std::endl;
+
+        switchToWrite(currentFd);
     }
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
     }
-    
+
 
 }
 
@@ -242,7 +243,7 @@ void WebServer::run()
             {
                 //pensez a fermer les fd ou faire une classe de catch special
                 throw std::runtime_error("ERROR: erreur critique de epoll_wait");
-            } 
+            }
         }
 
         for (int i = 0; i < numEvent; ++i)

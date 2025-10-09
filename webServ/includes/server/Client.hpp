@@ -28,14 +28,13 @@ class Client
         std::string             _rawRequest;
         Request                 _request;
         int                     _clientFd;
-        
-        
+
     public:
         Client(int clientFd, const ServerConfig& config);
         ~Client();
         void injectIntoRawRequest(std::string partialRequest);
         std::string getRawRequest();
-        Request getRequest();
+        Request& getRequest();
 };
 
 

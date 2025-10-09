@@ -209,6 +209,14 @@ int Request::parseRequest(const std::string& request)
 	return (1);
 }
 
+void Request::logRequest()
+{
+	std::cout << _method << " " << _path << " " << _protocol << std::endl;
+	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++)
+		std::cout << it->first << ": " << it->second << std::endl;
+	std::cout << std::endl << _body << std::endl;
+}
+
 // Getters
 std::string Request::getMethod() const{ return _method; }
 std::string Request::getPath() const{ return _path; }

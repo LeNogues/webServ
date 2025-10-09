@@ -30,7 +30,7 @@ std::string Client::getRawRequest()
     return (_rawRequest);
 }
 
-Request Client::getRequest()
+Request& Client::getRequest()
 {
     return (_request);
 }
