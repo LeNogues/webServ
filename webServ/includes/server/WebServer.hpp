@@ -27,11 +27,11 @@
 
 class WebServer
 {
-    private: 
+    private:
         std::vector<ServerConfig>&          _servers;
         std::map<int, const ServerConfig&>  _listeningSockets;
         std::map<int, Client>               _clients;
-        int                                 _epollFD;   
+        int                                 _epollFD;
 
         void handleNewConnection(int currentFd, const ServerConfig& config);
         void setServerAdress(const int& serverFd, sockaddr_in& serverAdress, size_t i);
@@ -40,12 +40,11 @@ class WebServer
         void handleClientRead(int currentFd);
         void switchToWrite(int clientFd);
         void switchToRead(int clientFd);
-        
 
     public:
         void    init();
         void    run();
-        
+
         WebServer(std::vector<ServerConfig>& configs);
         ~WebServer();
 };

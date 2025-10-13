@@ -12,7 +12,6 @@
 
 #include "../../includes/server/WebServer.hpp"
 
-
 WebServer::WebServer(std::vector<ServerConfig>& configs)
     : _servers(configs)
 {
@@ -148,9 +147,25 @@ void WebServer::handleClientDisconnection(int currentFd)
 
 void WebServer::handleClientWrite(int currentFd)
 {
-    (void)currentFd;
-    std::cout << "handleClientWrite fd :" << currentFd << std::endl;
-    switchToRead(currentFd);
+    std::map<int, Client>::iterator it = _clients.find(currentFd);
+    if (it == _clients.end())
+    {
+        std::cerr << "Error: write for unknown client fd: " << currentFd << std::endl;
+        handleClientDisconnection(currentFd);
+        return;
+    }
+
+    ssize_t sent = it->second.sendPending();
+    if (sent == -1)
+    {
+        std::cerr << "Error: send() failed for fd: " << currentFd << std::endl;
+        handleClientDisconnection(currentFd);
+        return;
+    }
+    if (it->second.hasResponse())
+        return;
+
+    handleClientDisconnection(currentFd);
 }
 
 void WebServer::switchToRead(int clientFd)
@@ -218,11 +233,22 @@ void WebServer::handleClientRead(int currentFd)
         currentClient.getRequest().logRequest();
         std::cout << "\n--- Request End ---" << std::endl;
 
+        //TODO: Replace by real response
+        std::string body = "OK\n";
+        std::map<std::string, std::string> headers;
+        headers["Content-Type"] = "text/plain";
+        headers["Content-Length"] = intToString(static_cast<int>(body.size()));
+        headers["Connection"] = "close";
+        currentClient.generateResponse(200, headers, body);
         switchToWrite(currentFd);
     }
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
+        std::map<std::string, std::string> headers;
+        headers["Connection"] = "close";
+        it->second.generateResponse(e.what(), headers, "");
+        switchToWrite(currentFd);
     }
 
 
