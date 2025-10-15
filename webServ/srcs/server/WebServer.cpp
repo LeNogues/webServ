@@ -12,10 +12,17 @@
 
 #include "../../includes/server/WebServer.hpp"
 
-WebServer::WebServer(std::vector<ServerConfig>& configs)
-    : _servers(configs)
+WebServer::WebServer(std::vector<ServerConfig>& configs, char **env) : _servers(configs)
 {
-
+	while (*env) {
+		if (strncmp("PWD=", *env, 4) == 0)
+			break;
+		env++;
+	}
+	if (!env)
+		return ;
+	std::string temp(&(*env[4]), &(*env[strlen(*env));
+	this->_selfPath = temp;
 }
 
 WebServer::~WebServer()
@@ -194,6 +201,34 @@ void WebServer::switchToWrite(int clientFd)
     }
 }
 
+#include <fcntl.h>
+#include <unistd.h>
+void	fill_body(std::string &body, std::string path, std::string root) {
+	char		buffer[1024];
+	int			bytes_read;
+	std::string	file = root + path;
+	int			fd = open(file.c_str(), O_RDONLY);
+
+	if (fd == -1)
+		return ; /////////////////////////throwowwwwwwwww
+	do {
+		bytes_read = read(fd, buffer, 1024);
+		std::string	chunk(buffer, &buffer[bytes_read]);
+		body += chunk;
+	} while (bytes_read > 0);
+}
+
+void	WebServer::get(Client &currentClient) {
+	std::string							body;
+	std::map<std::string, std::string>	headers;
+
+	fill_body(body, currentClient.getRequest().getPath(), "/home/wbeschon/Documents/webServ/webServ");
+	headers["Content-Type"] = "text/plain";
+	headers["Content-Length"] = intToString(static_cast<int>(body.size()));
+	headers["Connection"] = "close";
+	currentClient.generateResponse(200, headers, body);
+}
+
 void WebServer::handleClientRead(int currentFd)
 {
     std::map<int, Client>::iterator it = _clients.find(currentFd);
@@ -232,14 +267,15 @@ void WebServer::handleClientRead(int currentFd)
         }
         currentClient.getRequest().logRequest();
         std::cout << "\n--- Request End ---" << std::endl;
+		if (currentClient.getRequest().getMethod() == "GET")
+			get(currentClient);
+		/*else if (currentClient.getRequest().getMethod() == "POST")
+			post(currentClient);
+		else if (currentClient.getRequest().getMethod() == "DELETE")
+			delete(currentClient);*/
 
         //TODO: Replace by real response
-        std::string body = "OK\n";
-        std::map<std::string, std::string> headers;
-        headers["Content-Type"] = "text/plain";
-        headers["Content-Length"] = intToString(static_cast<int>(body.size()));
-        headers["Connection"] = "close";
-        currentClient.generateResponse(200, headers, body);
+		/////////limitsthusnaotheusntaheuh i have to redo this
         switchToWrite(currentFd);
     }
     catch(const std::exception& e)

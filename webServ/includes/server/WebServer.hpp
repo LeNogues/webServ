@@ -32,14 +32,16 @@ class WebServer
         std::map<int, const ServerConfig&>  _listeningSockets;
         std::map<int, Client>               _clients;
         int                                 _epollFD;
+		std::string							_selfPath;
 
-        void handleNewConnection(int currentFd, const ServerConfig& config);
-        void setServerAdress(const int& serverFd, sockaddr_in& serverAdress, size_t i);
-        void handleClientDisconnection(int currentFd);
-        void handleClientWrite(int currentFd);
-        void handleClientRead(int currentFd);
-        void switchToWrite(int clientFd);
-        void switchToRead(int clientFd);
+        void	 handleNewConnection(int currentFd, const ServerConfig& config);
+        void	 setServerAdress(const int& serverFd, sockaddr_in& serverAdress, size_t i);
+        void	 handleClientDisconnection(int currentFd);
+        void	 handleClientWrite(int currentFd);
+        void	 handleClientRead(int currentFd);
+        void	 switchToWrite(int clientFd);
+        void	 switchToRead(int clientFd);
+		void	get(Client &);
 
     public:
         void    init();

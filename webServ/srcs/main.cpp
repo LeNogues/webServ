@@ -21,17 +21,17 @@
 #include <exception>
 #include <csignal>
 
-int main(int argc, char **argv)
+int main(int argc, char **argv, char **envp)
 {
     try
     {
-      if (argc != 2)
-        throw std::runtime_error("ERROR: wrong number of arguments");
-      Config configs(argv[1]);
-      std::vector<ServerConfig>& serversConfigs = configs.getServers();
+		if (argc != 2)
+			throw std::runtime_error("ERROR: wrong number of arguments");
+		Config configs(argv[1]);
+		std::vector<ServerConfig>& serversConfigs = configs.getServers();
 
         // 2. Créer UN SEUL objet WebServer qui gère tout
-        WebServer webServer(serversConfigs);
+        WebServer webServer(serversConfig, envp);
 
         // 3. Initialiser les sockets d'écoute
         webServer.init();
