@@ -32,15 +32,17 @@ Request& Client::getRequest()
 static std::string getCurrentDate()
 {
 	time_t now = std::time(0);
-	std::tm *gtm = std::gmtime(&now);
+	std::tm *ltm = std::localtime(&now);
 	char buf[40];
-	strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S GMT", gtm);
+	strftime(buf, sizeof(buf), "%a, %d %b %Y %H:%M:%S %Z", ltm);
 	return (std::string(buf));
 }
 
 static void buildResponse(std::string& response, const std::map<std::string, std::string>& headers, const std::string& body)
 {
 	response += "Date: " + getCurrentDate() + "\r\n";
+    response += "Server: webServ/1.0\r\n";
+    response += "Content-Length: " + intToString(body.size()) + "\r\n";
 	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
 		response += it->first + ": " + it->second + "\r\n";
 	response += "\r\n" + body;

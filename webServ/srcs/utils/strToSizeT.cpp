@@ -17,3 +17,12 @@ bool strToSizeT(const std::string& str, size_t& size, int base)
 	size = static_cast<size_t>(val);
 	return true;
 }
+
+std::string intToString(int intToConvert)
+{
+    std::string str;
+    std::ostringstream convertStream;
+    convertStream << intToConvert;
+    str = convertStream.str();
+    return (str);
+}

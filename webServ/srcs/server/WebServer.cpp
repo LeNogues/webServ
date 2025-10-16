@@ -42,15 +42,6 @@ static void setNonBlocking(int serverFD)
         throw std::runtime_error("ERROR: fcntl failed");
 }
 
-static std::string intToString(int intToConvert)
-{
-    std::string str;
-    std::ostringstream convertStream;
-    convertStream << intToConvert;
-    str = convertStream.str();
-    return (str);
-}
-
 void WebServer::setServerAdress(const int& serverFd, sockaddr_in& serverAdress, size_t i)
 {
     serverAdress.sin_family = AF_INET;
@@ -237,17 +228,16 @@ void WebServer::handleClientRead(int currentFd)
         std::string body = "OK\n";
         std::map<std::string, std::string> headers;
         headers["Content-Type"] = "text/plain";
-        headers["Content-Length"] = intToString(static_cast<int>(body.size()));
-        headers["Connection"] = "close";
         currentClient.generateResponse(200, headers, body);
         switchToWrite(currentFd);
     }
     catch(const std::exception& e)
     {
         std::cerr << e.what() << '\n';
+        std::string body = generateErrorPage(e.what());
         std::map<std::string, std::string> headers;
-        headers["Connection"] = "close";
-        it->second.generateResponse(e.what(), headers, "");
+        headers["Content-Type"] = "text/html";
+        it->second.generateResponse(e.what(), headers, body);
         switchToWrite(currentFd);
     }
 

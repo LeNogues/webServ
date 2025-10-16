@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Webserv</title>
+	</head>
+	<body>
+		<div class="header">
+			<h1>Web Server</h1>
+			<h5>Arthur DOIREAU - Sebastien LE NOGUES - Walter BESCHON</h5>
+
+			<a href="http://localhost:8001/test.html">test.html</a>
+		</div>
+		<div class="bento-grid">
+			<div class="bento-box">
+				<h2>GET</h2>
+				<p>get file from server</p>
+			</div>
+			<div class="bento-box">
+				<h2>POST</h2>
+				<p>post file to server</p>
+			</div>
+			<div class="bento-box">
+				<h2>DELETE</h2>
+				<p>delete file from server</p>
+			</div>
+		</div>
+	</body>
+	<style>
+		body {
+			box-sizing: border-box;
+		}
+		h1 {
+			font-size: 24px;
+			font-weight: bold;
+			color: #002ed2;
+			line-height: 1.3;
+			margin: 0;
+		}
+		h2 {
+			font-size: 20px;
+			font-weight: bold;
+			color: #002ed2;
+			margin: 0;
+		}
+		h5 {
+			font-size: 12px;
+			color: #2b2b2b;
+			margin: 0;
+			line-height: 1.3;
+		}
+		p {
+			font-size: 16px;
+			color: #666;
+		}
+		.bento-grid {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			justify-content: center;
+			width: 100%;
+			height: 100%;
+			padding: 1rem;
+			gap: 1rem;
+			background-color: #ffffff;
+		}
+		.bento-box {
+			width: 20rem;
+			height: 20rem;
+			background-color: #ffffff;
+			box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+			padding: 1rem;
+			border-radius: 1rem;
+		}
+		.header {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			padding: 1rem;
+			border-radius: 1rem;
+			gap: 0.6rem;
+		}
+	</style>
+</html>

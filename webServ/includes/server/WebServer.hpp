@@ -22,7 +22,9 @@
 # include <cerrno>
 # include "Server.hpp"
 # include "Client.hpp"
+# include "../utils/generateErrorPage.hpp"
 # include "../config/ServerConfig.hpp"
+# include "../utils/strToSizeT.hpp"
 # include "../request/Request.hpp"
 
 class WebServer
