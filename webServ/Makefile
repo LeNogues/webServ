@@ -13,7 +13,8 @@ SRC     := 	srcs/main.cpp \
 			srcs/server/Server.cpp \
 			srcs/server/WebServer.cpp \
 			srcs/server/Client.cpp \
-			srcs/utils/generateErrorPage.cpp
+			srcs/utils/generateErrorPage.cpp \
+			srcs/utils/generateAutoIndex.cpp
 
 OBJ_DIR := obj
 OBJS    := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
