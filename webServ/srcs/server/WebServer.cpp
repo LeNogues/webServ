@@ -196,7 +196,11 @@ void WebServer::switchToWrite(int clientFd)
 std::string	getContentType(std::string fileName) {
 	size_t	pos = fileName.find_last_of('.');
 	std::string extension = (pos == std::string::npos) ? "": fileName.substr(pos + 1);
-	std::string contentType = "text/" + extension;
+	std::string contentType;
+	if (extension == "png")
+		contentType = "image/" + extension;
+	else
+		contentType = "text/" + extension;
 	return contentType;
 }
 
@@ -206,10 +210,10 @@ void	fillBody(std::string &body, std::string path, std::string root) {
 	char		buffer[1024];
 	int			bytes_read;
 	std::string	file = root + path;
-	int			fd = open(file.c_str(), O_RDONLY);
+	int			fd = -1; //open(file.c_str(), O_RDONLY);
 
 	if (fd == -1)
-		return ; /////////////////////////throwowwwwwwwww
+		throw HttpStatus(404); //////////////////////////////change itthesuthaseou
 	do {
 		bytes_read = read(fd, buffer, 1024);
 		std::string	chunk(buffer, &buffer[bytes_read]);
