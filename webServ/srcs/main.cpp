@@ -21,7 +21,7 @@
 #include <exception>
 #include <csignal>
 
-int main(int argc, char **argv, char **envp)
+int main(int argc, char **argv)
 {
     try
     {
@@ -31,7 +31,7 @@ int main(int argc, char **argv, char **envp)
 		std::vector<ServerConfig>& serversConfigs = configs.getServers();
 
         // 2. Créer UN SEUL objet WebServer qui gère tout
-        WebServer webServer(serversConfig, envp);
+        WebServer webServer(serversConfigs);
 
         // 3. Initialiser les sockets d'écoute
         webServer.init();

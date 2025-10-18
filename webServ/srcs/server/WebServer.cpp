@@ -12,17 +12,9 @@
 
 #include "../../includes/server/WebServer.hpp"
 
-WebServer::WebServer(std::vector<ServerConfig>& configs, char **env) : _servers(configs)
+WebServer::WebServer(std::vector<ServerConfig>& configs) : _servers(configs)
 {
-	while (*env) {
-		if (strncmp("PWD=", *env, 4) == 0)
-			break;
-		env++;
-	}
-	if (!env)
-		return ;
-	std::string temp(&(*env[4]), &(*env[strlen(*env));
-	this->_selfPath = temp;
+
 }
 
 WebServer::~WebServer()
@@ -201,9 +193,16 @@ void WebServer::switchToWrite(int clientFd)
     }
 }
 
+std::string	getContentType(std::string fileName) {
+	size_t	pos = fileName.find_last_of('.');
+	std::string extension = (pos == std::string::npos) ? "": fileName.substr(pos + 1);
+	std::string contentType = "text/" + extension;
+	return contentType;
+}
+
 #include <fcntl.h>
 #include <unistd.h>
-void	fill_body(std::string &body, std::string path, std::string root) {
+void	fillBody(std::string &body, std::string path, std::string root) {
 	char		buffer[1024];
 	int			bytes_read;
 	std::string	file = root + path;
@@ -219,11 +218,16 @@ void	fill_body(std::string &body, std::string path, std::string root) {
 }
 
 void	WebServer::get(Client &currentClient) {
+	std::string							path;
 	std::string							body;
 	std::map<std::string, std::string>	headers;
+	std::string							contentType;
 
-	fill_body(body, currentClient.getRequest().getPath(), "/home/wbeschon/Documents/webServ/webServ");
-	headers["Content-Type"] = "text/plain";
+	path = currentClient.getRequest().getPath();
+	contentType = getContentType(path);
+	fillBody(body, path, "/home/wbeschon/Documents/webServ/webServ");
+	std::cout << contentType << '\n';
+	headers["Content-Type"] = contentType;
 	headers["Content-Length"] = intToString(static_cast<int>(body.size()));
 	headers["Connection"] = "close";
 	currentClient.generateResponse(200, headers, body);
