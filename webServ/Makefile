@@ -1,6 +1,6 @@
 NAME	:= webServ
 CC		:= c++
-CFLAGS	:= -Wall -Wextra -Werror -std=c++98
+CFLAGS	:= -Wall -Wextra -Werror -std=c++98 -g3
 IFLAGS	:= -Iincludes/config -Iincludes/request -Iincludes/server -Iincludes/utils
 
 SRC     := 	srcs/main.cpp \

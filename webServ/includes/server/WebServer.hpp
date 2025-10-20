@@ -20,6 +20,9 @@
 # include <map>
 # include <vector>
 # include <cerrno>
+# include <cstdio>
+# include <sys/stat.h>
+# include <sys/wait.h>
 # include "Server.hpp"
 # include "Client.hpp"
 # include "../utils/generateErrorPage.hpp"
@@ -27,11 +30,12 @@
 # include "../utils/strToSizeT.hpp"
 # include "../request/Request.hpp"
 
+
 class WebServer
 {
     private:
-        std::vector<ServerConfig>&          _servers;
-        std::map<int, const ServerConfig&>  _listeningSockets;
+        std::vector<ServerConfig>           _servers;
+        std::map<int, const ServerConfig>  _listeningSockets;
         std::map<int, Client>               _clients;
         int                                 _epollFD;
 
@@ -47,7 +51,13 @@ class WebServer
         void    init();
         void    run();
 
-        WebServer(std::vector<ServerConfig>& configs);
+        class signalException : public std::exception
+        {
+            public:
+                virtual const char* what() const throw();
+        };
+
+        WebServer(const std::vector<ServerConfig>& configs);
         ~WebServer();
 };
 

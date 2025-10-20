@@ -41,6 +41,7 @@ class Client
         Client(int clientFd, const ServerConfig& config);
         ~Client();
         Request& getRequest();
+        const std::string& getRoot();
         void generateResponse(const std::string& status, const std::map<std::string, std::string>& headers, const std::string& body);
         void generateResponse(const int status, const std::map<std::string, std::string>& headers, const std::string& body);
         bool hasResponse() const;

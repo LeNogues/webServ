@@ -48,6 +48,11 @@ static void buildResponse(std::string& response, const std::map<std::string, std
 	response += "\r\n" + body;
 }
 
+const std::string& Client::getRoot()
+{
+    return (this->_config._root);
+}
+
 void Client::generateResponse(const std::string& status, const std::map<std::string, std::string>& headers, const std::string& body)
 {
     _response = status + "\r\n";
