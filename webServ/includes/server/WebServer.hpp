@@ -25,10 +25,11 @@
 # include <sys/wait.h>
 # include "Server.hpp"
 # include "Client.hpp"
-# include "../utils/generateErrorPage.hpp"
+# include "../httpGen/generateErrorPage.hpp"
 # include "../config/ServerConfig.hpp"
-# include "../utils/strToSizeT.hpp"
+# include "../utils/converters.hpp"
 # include "../request/Request.hpp"
+# include "../utils/parsePath.hpp"
 
 
 class WebServer

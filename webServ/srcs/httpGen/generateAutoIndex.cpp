@@ -1,4 +1,4 @@
-#include "../../includes/utils/generateAutoIndex.hpp"
+#include "../../includes/httpGen/generateAutoIndex.hpp"
 
 static std::string	buildHeader(const std::string& path)
 {

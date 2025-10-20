@@ -6,8 +6,7 @@
 #include <cerrno>
 #include <cstring>
 #include <sys/stat.h>
-#include "../utils/httpStatus.hpp"
-
+#include "../httpGen/httpStatus.hpp"
 
 std::string generateAutoIndex(const std::string& path);
 

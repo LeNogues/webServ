@@ -5,16 +5,17 @@ IFLAGS	:= -Iincludes/config -Iincludes/request -Iincludes/server -Iincludes/util
 
 SRC     := 	srcs/main.cpp \
 			srcs/config/Config.cpp \
-			srcs/utils/writeError.cpp \
-			srcs/utils/trim.cpp \
-			srcs/utils/httpStatus.cpp \
-			srcs/utils/strToSizeT.cpp \
+			srcs/httpGen/httpStatus.cpp \
+			srcs/httpGen/generateErrorPage.cpp \
+			srcs/httpGen/generateAutoIndex.cpp \
 			srcs/request/Request.cpp \
+			srcs/server/Client.cpp \
 			srcs/server/Server.cpp \
 			srcs/server/WebServer.cpp \
-			srcs/server/Client.cpp \
-			srcs/utils/generateErrorPage.cpp \
-			srcs/utils/generateAutoIndex.cpp
+			srcs/utils/converters.cpp \
+			srcs/utils/trim.cpp \
+			srcs/utils/writeError.cpp \
+			srcs/utils/parsePath.cpp
 
 OBJ_DIR := obj
 OBJS    := $(SRC:%.cpp=$(OBJ_DIR)/%.o)

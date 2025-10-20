@@ -13,11 +13,8 @@
 #include "../../includes/server/Client.hpp"
 
 Client::Client(int clientFd, const ServerConfig& config)
-    : _config(config), _clientFd(clientFd)
+	: _config(config), _response(""), _request(_config), _clientFd(clientFd)
 {
-    (void)_clientFd;
-    (void)_config;
-    _response = "";
 }
 
 Client::~Client()
@@ -26,7 +23,7 @@ Client::~Client()
 
 Request& Client::getRequest()
 {
-    return (_request);
+	return (_request);
 }
 
 static std::string getCurrentDate()
@@ -38,11 +35,11 @@ static std::string getCurrentDate()
 	return (std::string(buf));
 }
 
-static void buildResponse(std::string& response, const std::map<std::string, std::string>& headers, const std::string& body)
+void Client::buildResponse(std::string& response, const std::map<std::string, std::string>& headers, const std::string& body)
 {
 	response += "Date: " + getCurrentDate() + "\r\n";
-    response += "Server: webServ/1.0\r\n";
-    response += "Content-Length: " + intToString(body.size()) + "\r\n";
+	response += "Server: " + _config._serverName[0] + "\r\n";
+	response += "Content-Length: " + intToString(body.size()) + "\r\n";
 	for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); it++)
 		response += it->first + ": " + it->second + "\r\n";
 	response += "\r\n" + body;
@@ -50,38 +47,42 @@ static void buildResponse(std::string& response, const std::map<std::string, std
 
 const std::string& Client::getRoot()
 {
-    return (this->_config._root);
+	return (this->_config._root);
 }
 
+const ServerConfig& Client::getConfig()
+{
+	return (_config);
+}
 void Client::generateResponse(const std::string& status, const std::map<std::string, std::string>& headers, const std::string& body)
 {
-    _response = status + "\r\n";
+	_response = status + "\r\n";
 	buildResponse(_response, headers, body);
 }
 void Client::generateResponse(const int status, const std::map<std::string, std::string>& headers, const std::string& body)
 {
-    _response = getStatusMessage(status) + "\r\n";
+	_response = getStatusMessage(status) + "\r\n";
 	buildResponse(_response, headers, body);
 }
 
 bool	Client::hasResponse() const
 {
-    return (!_response.empty());
+	return (!_response.empty());
 }
 
 ssize_t	Client::sendPending()
 {
-    ssize_t	bytesSent;
+	ssize_t	bytesSent;
 
-    if (_response.empty())
-        return (0);
-    bytesSent = send(_clientFd, _response.data(), _response.size(), 0);
-    if (bytesSent > 0)
-    {
-        _response.erase(0, static_cast<size_t>(bytesSent));
-        return (bytesSent);
-    }
-    if (bytesSent == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
-        return (-2);
-    return (-1);
+	if (_response.empty())
+		return (0);
+	bytesSent = send(_clientFd, _response.data(), _response.size(), 0);
+	if (bytesSent > 0)
+	{
+		_response.erase(0, static_cast<size_t>(bytesSent));
+		return (bytesSent);
+	}
+	if (bytesSent == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+		return (-2);
+	return (-1);
 }

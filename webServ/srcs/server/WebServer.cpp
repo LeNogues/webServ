@@ -15,12 +15,10 @@
 WebServer::WebServer(const std::vector<ServerConfig>& configs)
     : _servers(configs)
 {
-    
 }
 
 WebServer::~WebServer()
 {
-
 }
 
 static void errorInit(const std::string& Error, const std::string& value, const int& serverFd)
@@ -56,7 +54,7 @@ void WebServer::handleNewConnection(int currentFd, const ServerConfig& config)
 {
 
     std::cout << "\n------------------------------------------------------------------------------------------------------------------------------" << std::endl;
-    std::cout << "during NewConnection " << config._serverName[0] << std::endl; 
+    std::cout << "during NewConnection " << config._serverName[0] << std::endl;
     while (true)
     {
         struct sockaddr_in clientAddress;
@@ -155,29 +153,20 @@ void WebServer::switchToWrite(int clientFd)
     }
 }
 
-void handleDeleteRequest(Client& currentClient, const std::string& uri)
+void handleDeleteRequest(Client& currentClient, const std::string& filePath)
 {
-    //todo: empecher les delete en ../
-    std::string filePath = currentClient.getRoot() + uri;
     struct stat buffer;
 
     if (stat(filePath.c_str(), &buffer) != 0)
     {
-        std::map<std::string, std::string> headers;
-        headers["Content-Type"] = "text/plain";
         std::cout << "Warning: cannot delete: " << filePath << std::endl;
-        //todo changer ca, juste un message d erreur, pas une page entiere
-        currentClient.generateResponse(404, headers, "Not Found");
-        return;
+        throw HttpStatus(404);
     }
 
     if (std::remove(filePath.c_str()) == -1)
     {
-        std::map<std::string, std::string> headers;
-        headers["Content-Type"] = "text/plain";
         std::cout << "Warning: cannot delete: " << filePath << std::endl;
-        currentClient.generateResponse(500, headers, "Internal Server Error: something");
-        return ;
+        throw HttpStatus(500);
     }
     std::map<std::string, std::string> headers;
     currentClient.generateResponse(204, headers, "");
@@ -197,12 +186,13 @@ void handlePostRequest(Client& currentClient, std::string uri)
     (void)currentClient;
     (void)uri;
 
-    std::cout << "POST request received" << std::endl;    
+    std::cout << "POST request received" << std::endl;
 }
 
 void WebServer::handleClientRead(int currentFd)
 {
     std::map<int, Client>::iterator it = _clients.find(currentFd);
+    Client& currentClient = it->second;
 
     if (it == _clients.end())
     {
@@ -213,7 +203,6 @@ void WebServer::handleClientRead(int currentFd)
 
     try
     {
-        Client& currentClient = it->second;
         char buffer[4096];
         ssize_t bytes_read;
 
@@ -240,37 +229,50 @@ void WebServer::handleClientRead(int currentFd)
         currentClient.getRequest().logRequest();
         std::cout << "--- Request End ---" << std::endl;
 
-        //TODO: Replace by real response
         std::string method = currentClient.getRequest().getMethod();
         std::string uri = currentClient.getRequest().getPath();
 
-        
         if (method == "DELETE")
-        {
             handleDeleteRequest(currentClient, uri);
-        }
         else if (method == "POST")
-        {
             handlePostRequest(currentClient, uri);
-        }
         else if (method == "GET")
-        {
             handleGetRequest(currentClient, uri);
+
+        switchToWrite(currentFd);
+    }
+    catch(const HttpStatus& status)
+    {
+        std::cerr << status.what() << '\n';
+        std::string									body = "";
+        std::map<std::string, std::string>			headers;
+        std::map<int, std::string>::const_iterator	itPage = currentClient.getConfig()._errorPage.find(status.getStatusCode());
+
+        if (itPage != currentClient.getConfig()._errorPage.end())
+        {
+            std::string	customPath = itPage->second;
+            std::string	fileContent;
+
+            if (fileToString(customPath, fileContent) == true)
+            {
+                headers["Content-Type"] = guessContentType(customPath);
+                body = fileContent;
+            }
+            else
+            {
+                body = generateErrorPage(status.what());
+                headers["Content-Type"] = "text/html";
+            }
+        }
+        else
+        {
+            body = generateErrorPage(status.what());
+            headers["Content-Type"] = "text/html";
         }
 
+        currentClient.generateResponse(status.getStatusCode(), headers, body);
         switchToWrite(currentFd);
     }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-        std::string body = generateErrorPage(e.what());
-        std::map<std::string, std::string> headers;
-        headers["Content-Type"] = "text/html";
-        it->second.generateResponse(e.what(), headers, body);
-        switchToWrite(currentFd);
-    }
-
-
 }
 
 void WebServer::run()
@@ -312,7 +314,6 @@ void WebServer::run()
             {
                 handleNewConnection(currentFd, currentServer->second);
             }
-                
         }
     }
 }

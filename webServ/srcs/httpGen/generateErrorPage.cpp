@@ -1,4 +1,4 @@
-#include "../../includes/utils/generateErrorPage.hpp"
+#include "../../includes/httpGen/generateErrorPage.hpp"
 
 std::string generateErrorPage(const std::string& errorMessage)
 {
@@ -45,6 +45,6 @@ std::string generateErrorPage(const std::string& errorMessage)
 			"}\n"
 		"</style>\n"
 	"</html>\n"
-    ;
-    return (body);
+	;
+	return (body);
 }

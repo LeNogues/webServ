@@ -15,8 +15,8 @@
 # define CLIENT_HPP
 
 # include "../config/ServerConfig.hpp"
+# include "../httpGen/httpStatus.hpp"
 # include "../request/Request.hpp"
-# include "../utils/httpStatus.hpp"
 
 # include <map>
 # include <vector>
@@ -37,11 +37,14 @@ class Client
         Request                 _request;
         int                     _clientFd;
 
+        void buildResponse(std::string& response, const std::map<std::string, std::string>& headers, const std::string& body);
+
     public:
         Client(int clientFd, const ServerConfig& config);
         ~Client();
         Request& getRequest();
         const std::string& getRoot();
+        const ServerConfig& getConfig();
         void generateResponse(const std::string& status, const std::map<std::string, std::string>& headers, const std::string& body);
         void generateResponse(const int status, const std::map<std::string, std::string>& headers, const std::string& body);
         bool hasResponse() const;

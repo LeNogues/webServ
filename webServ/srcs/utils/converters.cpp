@@ -1,4 +1,4 @@
-#include "../../includes/utils/strToSizeT.hpp"
+#include "../../includes/utils/converters.hpp"
 
 bool strToSizeT(const std::string& str, size_t& size, int base)
 {
@@ -20,9 +20,23 @@ bool strToSizeT(const std::string& str, size_t& size, int base)
 
 std::string intToString(int intToConvert)
 {
-    std::string str;
-    std::ostringstream convertStream;
-    convertStream << intToConvert;
-    str = convertStream.str();
-    return (str);
+	std::string str;
+	std::ostringstream convertStream;
+	convertStream << intToConvert;
+	str = convertStream.str();
+	return (str);
+}
+
+bool fileToString(const std::string& path, std::string& out)
+{
+	std::ifstream		ifs;
+	std::stringstream	buffer;
+
+	ifs.open(path.c_str(), std::ios::in | std::ios::binary);
+	if (!ifs.is_open())
+		return (false);
+	buffer << ifs.rdbuf();
+	out = buffer.str();
+	ifs.close();
+	return (true);
 }
