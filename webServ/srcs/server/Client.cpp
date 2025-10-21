@@ -50,6 +50,11 @@ const std::string& Client::getRoot()
 	return (this->_config._root);
 }
 
+const std::string& Client::getDefaultFile()
+{
+	return (this->_config._defaultFile);
+}
+
 const ServerConfig& Client::getConfig()
 {
 	return (_config);

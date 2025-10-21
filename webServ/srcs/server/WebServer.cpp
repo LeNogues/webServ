@@ -153,33 +153,8 @@ void WebServer::switchToWrite(int clientFd)
     }
 }
 
-std::string	getContentType(std::string fileName) {
-	size_t	pos = fileName.find_last_of('.');
-	std::string extension = (pos == std::string::npos) ? "": fileName.substr(pos + 1);
-	std::string contentType;
-	if (extension == "png")
-		contentType = "image/" + extension;
-	else
-		contentType = "text/" + extension;
-	return contentType;
-}
-
 #include <fcntl.h>
 #include <unistd.h>
-void	fillBody(std::string &body, std::string path, std::string root) {
-	char		buffer[1024];
-	int			bytes_read;
-	std::string	file = root + path;
-	int			fd = -1; //open(file.c_str(), O_RDONLY);
-
-	if (fd == -1)
-		throw HttpStatus(404); //////////////////////////////change itthesuthaseou
-	do {
-		bytes_read = read(fd, buffer, 1024);
-		std::string	chunk(buffer, &buffer[bytes_read]);
-		body += chunk;
-	} while (bytes_read > 0);
-}
 
 void	WebServer::get(Client &currentClient) {
 	std::string							path;
@@ -188,8 +163,9 @@ void	WebServer::get(Client &currentClient) {
 	std::string							contentType;
 
 	path = currentClient.getRequest().getPath();
-	contentType = getContentType(path);
-	fillBody(body, path, "/home/wbeschon/Documents/webServ/webServ");
+	contentType = guessContentType(path);
+	if (fileToString(path, body) == false)
+        throw HttpStatus(404);
 	std::cout << contentType << '\n';
 	headers["Content-Type"] = contentType;
 	headers["Content-Length"] = intToString(static_cast<int>(body.size()));
