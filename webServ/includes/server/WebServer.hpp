@@ -21,6 +21,8 @@
 # include <vector>
 # include <cerrno>
 # include <cstdio>
+# include <fstream>
+# include <sstream>
 # include <sys/stat.h>
 # include <sys/wait.h>
 # include "Server.hpp"
@@ -35,7 +37,7 @@ class WebServer
 {
     private:
         std::vector<ServerConfig>           _servers;
-        std::map<int, const ServerConfig>  _listeningSockets;
+        std::map<int, const ServerConfig>   _listeningSockets;
         std::map<int, Client>               _clients;
         int                                 _epollFD;
 
