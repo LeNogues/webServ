@@ -55,6 +55,10 @@ const std::string& Client::getDefaultFile()
 	return (this->_config._defaultFile);
 }
 
+bool	Client::getAutoIndex() {
+	return (this->_config._autoIndex);
+}
+
 const ServerConfig& Client::getConfig()
 {
 	return (_config);

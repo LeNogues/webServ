@@ -155,23 +155,57 @@ void WebServer::switchToWrite(int clientFd)
 
 #include <fcntl.h>
 #include <unistd.h>
+#include "../../includes/httpGen/generateAutoIndex.hpp"
 
-void	WebServer::get(Client &currentClient) {
-	std::string							path;
+void	getFromDir(Client &currentClient, std::string path) {
+	std::map<std::string, std::string>	headers;
 	std::string							body;
+	std::string							contentType;
+	std::string							indexPath;
+	struct stat							info;
+
+	indexPath = path + currentClient.getDefaultFile();
+	if (stat(indexPath.c_str(), &info) == -1 || fileToString(indexPath, body) == false) {
+		if (currentClient.getAutoIndex() == false) {
+			throw HttpStatus(403);
+		} else {
+			body = generateAutoIndex(path);
+			headers["Content-Type"] = "text/html";
+		}
+	} else {
+		contentType = guessContentType(indexPath);
+		headers["Content-Type"] = contentType;
+	}
+	currentClient.generateResponse(200, headers, body);
+}
+
+void	getFromFile(Client &currentClient, std::string path) {
 	std::map<std::string, std::string>	headers;
 	std::string							contentType;
+	std::string							body;
 
-	path = currentClient.getRequest().getPath();
 	contentType = guessContentType(path);
 	if (fileToString(path, body) == false)
         throw HttpStatus(404);
-	std::cout << contentType << '\n';
 	headers["Content-Type"] = contentType;
-	headers["Content-Length"] = intToString(static_cast<int>(body.size()));
-	headers["Connection"] = "close";
 	currentClient.generateResponse(200, headers, body);
-  }
+}
+
+void	WebServer::get(Client &currentClient) {
+	std::string							path;
+	struct stat							info;
+
+	path = currentClient.getRequest().getPath();
+	if (stat(path.c_str(), &info) == -1)
+		throw HttpStatus(404);
+	if (S_ISDIR(info.st_mode)) {
+		getFromDir(currentClient, path);
+	} else if (S_ISREG(info.st_mode)) {
+		getFromFile(currentClient, path);
+	} else {
+		throw HttpStatus(404);
+	}
+}
 
 void handleDeleteRequest(Client& currentClient, const std::string& filePath)
 {
