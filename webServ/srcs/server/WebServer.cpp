@@ -173,12 +173,71 @@ void handleDeleteRequest(Client& currentClient, const std::string& filePath)
     std::cout << filePath << " successfully deleted" << std::endl;
 }
 
+static std::string getMimeType(const std::string& filePath) {
+    // Crée une map statique pour ne l'initialiser qu'une seule fois.
+    static std::map<std::string, std::string> mimeTypes;
+    if (mimeTypes.empty()) {
+        mimeTypes[".html"] = "text/html";
+        mimeTypes[".css"] = "text/css";
+        mimeTypes[".js"] = "application/javascript";
+        mimeTypes[".jpg"] = "image/jpeg";
+        mimeTypes[".jpeg"] = "image/jpeg";
+        mimeTypes[".png"] = "image/png";
+        mimeTypes[".gif"] = "image/gif";
+        // Ajoutez d'autres types MIME si nécessaire
+    }
+
+    size_t dotPos = filePath.rfind('.');
+    if (dotPos != std::string::npos) {
+        std::string ext = filePath.substr(dotPos);
+        if (mimeTypes.count(ext)) {
+            return mimeTypes[ext];
+        }
+    }
+    // Type par défaut si l'extension n'est pas reconnue
+    return "application/octet-stream";
+}
+
 void handleGetRequest(Client& currentClient, std::string uri)
 {
-    (void)currentClient;
-    (void)uri;
+    if (uri == "/") {
+        uri = "/index.html";
+    }
 
-    std::cout << "GET request received" << std::endl;
+    std::string filePath = currentClient.getRoot() + uri;
+
+    struct stat buffer;
+    if (stat(filePath.c_str(), &buffer) != 0) {
+        std::cerr << "File not found: " << filePath << std::endl;
+        std::map<std::string, std::string> headers;
+        headers["Content-Type"] = "text/html";
+        currentClient.generateResponse(404, headers, "<html><body><h1>404 Not Found</h1></body></html>");
+        return;
+    }
+
+    std::ifstream file(filePath.c_str(), std::ios::binary);
+    if (!file.is_open()) {
+        std::cerr << "Could not open file: " << filePath << std::endl;
+        std::map<std::string, std::string> headers;
+        headers["Content-Type"] = "text/html";
+        currentClient.generateResponse(500, headers, "<html><body><h1>500 Internal Server Error</h1></body></html>");
+        return;
+    }
+
+    std::stringstream contentStream;
+    contentStream << file.rdbuf();
+    std::string fileContent = contentStream.str();
+    file.close();
+
+    std::map<std::string, std::string> headers;
+     headers["Content-Type"] = getMimeType(filePath);
+    std::stringstream ss;
+    ss << fileContent.length();
+    headers["Content-Length"] = ss.str();
+
+    currentClient.generateResponse(200, headers, fileContent);
+    
+    std::cout << "Successfully served: " << filePath << std::endl;
 }
 
 void handlePostRequest(Client& currentClient, std::string uri)

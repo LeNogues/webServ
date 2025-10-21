@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Webserv</title>
+		<link rel="stylesheet" href="style.css">
+	</head>
+	<body>
+		<header class="main-header">
+			<div class="title">
+				<h1>Webserv</h1>
+			</div>
+			<div class="collaborator">
+				<h2>Arthur Doireau</h2>
+				<h2>Sebastien Le Nogues</h2>
+				<h2>Walter Beschon</h2>
+			</div>
+		</header>
+		<main>
+			<div class="cards-zone">
+				<div class="GET Card">
+					<h3 class="title-card">GET</h3>
+					<p class="text-card">Get file from server</p>
+					<button class="method-button">GET</button>
+				</div>
+
+				<div class="POST Card">
+					<h3 class="title-card">POST</h3>
+					<p class="text-card">Post file to server</p>
+					<button class="method-button">POST</button>
+				</div>
+
+				<div class="DELETE Card">
+					<h3 class="title-card">DELETE</h3>
+					<p class="text-card">delete file from server</p>
+					
+					<input type="text" id="deleteFileInput" placeholder="Chemin du fichier (ex: /test.txt)">
+					
+					<button id="deleteButton" class="method-button">delete</button>
+
+					<div id="statusMessage"></div>
+				</div>
+
+			</div>
+		</main>
+		<footer class="main-footer">
+			<h6>Maybe a footer wasn't neccessary...</h6>
+		</footer>
+
+		<script src="app.js"></script>
+	</body>
+</html>
