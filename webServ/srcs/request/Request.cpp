@@ -2,11 +2,13 @@
 
 void Request::addMethod(const std::string&  word)
 {
-	if (word != "GET" && word != "POST" && word != "DELETE")
+	std::vector<std::string> allowedMethods = _config._allowedMethods;
+	if (std::find(allowedMethods.begin(), allowedMethods.end(), word) == allowedMethods.end())
 	{
-		if (word == "PUT" || word == "PATCH" || word == "OPTIONS" || word == "CONNECT" || word == "TRACE")
+		if (word == "GET" || word == "POST" || word == "DELETE")
+			throw HttpStatus(405);
+		else
 			throw HttpStatus(501);
-		throw HttpStatus(405);
 	}
 	_method = word;
 }
@@ -15,7 +17,7 @@ void Request::addPath(const std::string&  word)
 {
 	if (word[0] != '/' || word.find("..") != std::string::npos)
 		throw HttpStatus(400);
-	_path = word;
+	_path = _config._root + word;
 }
 
 void Request::addProtocol(const std::string&  word)
@@ -86,8 +88,13 @@ void Request::checkHeader(void)
 	}
 	else if (!_bodyNecessary && _request.size() > 0)
 		throw HttpStatus(411);
-	if (contentLength != _headers.end() && !strToSizeT(contentLength->second, _contentLength, 10))
+	if (contentLength != _headers.end())
+	{
+		if (!strToSizeT(contentLength->second, _contentLength, 10))
 			throw HttpStatus(400);
+		if (_contentLength > _config._maxSizeBody)
+			throw HttpStatus(413);
+	}
 	if (transferEncoding != _headers.end())
 	{
 		if (transferEncoding->second != "chunked")
@@ -163,6 +170,8 @@ int Request::processChunkedRequest()
 		if (_request.substr(pos + 2 + chunkSize, 2) != "\r\n")
 			throw HttpStatus(400);
 		_body += _request.substr(pos + 2, chunkSize);
+		if (_body.size() > _config._maxSizeBody)
+			throw HttpStatus(413);
 		_request = _request.substr(pos + 2 + chunkSize + 2);
 		pos = _request.find("\r\n");
 	}
@@ -233,7 +242,7 @@ std::string Request::getBody() const
 bool Request::getIsValid() const{ return _isValid; }
 
 // Constructor
-Request::Request()
+Request::Request(const ServerConfig& config) : _config(config)
 {
 	_request = "";
 	_method = "";
@@ -252,6 +261,7 @@ Request::Request()
 }
 
 Request::Request(const Request& other)
+    : _config(other._config)
 {
 	*this = other;
 }

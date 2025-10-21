@@ -219,7 +219,7 @@ static bool addCommonToken(std::vector<std::string>& tokens, CommonConfig& newCo
         addAutoIndex(tokens, newConfig);
     else if (tokens[0] == "index")
         addDefaultFile(tokens, newConfig);
-    else if (tokens[0] == "client_body_buffer_size")
+    else if (tokens[0] == "client_max_body_size")
         addMaxSize(tokens, newConfig);
     else if (tokens[0] == "allow_methods")
         addAllowedMethods(tokens, newConfig);

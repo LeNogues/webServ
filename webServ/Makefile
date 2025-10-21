@@ -1,18 +1,21 @@
 NAME	:= webServ
 CC		:= c++
-CFLAGS	:= -Wall -Wextra -Werror -std=c++98
+CFLAGS	:= -Wall -Wextra -Werror -std=c++98 -g3
 IFLAGS	:= -Iincludes/config -Iincludes/request -Iincludes/server -Iincludes/utils
 
 SRC     := 	srcs/main.cpp \
 			srcs/config/Config.cpp \
-			srcs/utils/writeError.cpp \
-			srcs/utils/trim.cpp \
-			srcs/utils/httpStatus.cpp \
-			srcs/utils/strToSizeT.cpp \
+			srcs/httpGen/httpStatus.cpp \
+			srcs/httpGen/generateErrorPage.cpp \
+			srcs/httpGen/generateAutoIndex.cpp \
 			srcs/request/Request.cpp \
+			srcs/server/Client.cpp \
 			srcs/server/Server.cpp \
 			srcs/server/WebServer.cpp \
-			srcs/server/Client.cpp
+			srcs/utils/converters.cpp \
+			srcs/utils/trim.cpp \
+			srcs/utils/writeError.cpp \
+			srcs/utils/parsePath.cpp
 
 OBJ_DIR := obj
 OBJS    := $(SRC:%.cpp=$(OBJ_DIR)/%.o)

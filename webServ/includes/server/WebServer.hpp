@@ -20,16 +20,25 @@
 # include <map>
 # include <vector>
 # include <cerrno>
+# include <cstdio>
+# include <fstream>
+# include <sstream>
+# include <sys/stat.h>
+# include <sys/wait.h>
 # include "Server.hpp"
 # include "Client.hpp"
+# include "../httpGen/generateErrorPage.hpp"
 # include "../config/ServerConfig.hpp"
+# include "../utils/converters.hpp"
 # include "../request/Request.hpp"
+# include "../utils/parsePath.hpp"
+
 
 class WebServer
 {
     private:
-        std::vector<ServerConfig>&          _servers;
-        std::map<int, const ServerConfig&>  _listeningSockets;
+        std::vector<ServerConfig>           _servers;
+        std::map<int, const ServerConfig>   _listeningSockets;
         std::map<int, Client>               _clients;
         int                                 _epollFD;
 		std::string							_selfPath;
@@ -47,7 +56,13 @@ class WebServer
         void    init();
         void    run();
 
-        WebServer(std::vector<ServerConfig>& configs);
+        class signalException : public std::exception
+        {
+            public:
+                virtual const char* what() const throw();
+        };
+
+        WebServer(const std::vector<ServerConfig>& configs);
         ~WebServer();
 };
 

@@ -1,4 +1,4 @@
-#include "../../includes/utils/httpStatus.hpp"
+#include "../../includes/httpGen/httpStatus.hpp"
 
 std::map<int, std::string>	STATUS_CODES = initStatusCodes();
 

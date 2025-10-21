@@ -1,11 +1,12 @@
 #ifndef PARSREQUEST_HPP
 # define PARSREQUEST_HPP
 
-
-# include "../utils/httpStatus.hpp"
-# include "../utils/strToSizeT.hpp"
+# include "../config/ServerConfig.hpp"
+# include "../httpGen/httpStatus.hpp"
+# include "../utils/converters.hpp"
 # include "../utils/trim.hpp"
 
+# include <algorithm>
 # include <iostream>
 # include <sstream>
 # include <string>
@@ -15,6 +16,7 @@
 class Request
 {
 	private:
+		const ServerConfig&					_config;
 		std::map<std::string, std::string>	_headers;
 		std::string							_request;
 		std::string							_method;
@@ -50,17 +52,17 @@ class Request
 
 		// Getters
 		std::map<std::string, std::string> 	getHeaders()	const;
-		std::string 						getMethod() 	const;
-		std::string 						getPrtcl() 		const;
-		std::string 						getPath() 		const;
-		std::string 						getBody() 		const;
+		std::string 						getMethod()		const;
+		std::string 						getPrtcl()		const;
+		std::string 						getPath()		const;
+		std::string 						getBody()		const;
 		bool								getIsValid() const;
 
 		// Constructors
-		Request();
+		Request(const ServerConfig& config);
+		~Request();
 		Request(const Request& other);
 		Request& operator=(const Request& other);
-		~Request();
 };
 
 #endif

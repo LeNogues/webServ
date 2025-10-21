@@ -12,14 +12,13 @@
 
 #include "../../includes/server/WebServer.hpp"
 
-WebServer::WebServer(std::vector<ServerConfig>& configs) : _servers(configs)
+WebServer::WebServer(const std::vector<ServerConfig>& configs)
+    : _servers(configs)
 {
-
 }
 
 WebServer::~WebServer()
 {
-
 }
 
 static void errorInit(const std::string& Error, const std::string& value, const int& serverFd)
@@ -41,15 +40,6 @@ static void setNonBlocking(int serverFD)
         throw std::runtime_error("ERROR: fcntl failed");
 }
 
-static std::string intToString(int intToConvert)
-{
-    std::string str;
-    std::ostringstream convertStream;
-    convertStream << intToConvert;
-    str = convertStream.str();
-    return (str);
-}
-
 void WebServer::setServerAdress(const int& serverFd, sockaddr_in& serverAdress, size_t i)
 {
     serverAdress.sin_family = AF_INET;
@@ -59,45 +49,12 @@ void WebServer::setServerAdress(const int& serverFd, sockaddr_in& serverAdress, 
         errorInit("ERROR: Adresse IP invalide: ", _servers[i]._listenOn.first, serverFd);
 }
 
-void WebServer::init()
-{
-    _epollFD = epoll_create(MAX_EVENTS);
-    if (_epollFD == -1)
-        throw std::runtime_error("ERROR:can't create epoll instance");
-
-    for (size_t i = 0; i < _servers.size(); ++i)
-    {
-        int serverFd = socket(AF_INET, SOCK_STREAM, 0);
-        if (serverFd == -1)
-            throw std::runtime_error("ERROR: could not create socket for " + _servers[i]._serverName[0]);
-
-        int opt = 1;
-        if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-            errorInit("ERROR: setsockopt failed for", _servers[i]._serverName[0], serverFd);
-
-        struct sockaddr_in serverAdress;
-        setServerAdress(serverFd, serverAdress, i);
-
-        if (bind(serverFd, (struct sockaddr*)&serverAdress, sizeof(serverAdress)) < 0)
-            errorInit("ERROR: failed to bind to port ", intToString(_servers[i]._listenOn.second), serverFd);
-
-        setNonBlocking(serverFd);
-
-        if (listen(serverFd, SOMAXCONN) < 0)
-            errorInit("ERROR: listen failed for ", _servers[i]._serverName[0], serverFd);
-
-        struct epoll_event event = {};
-        event.events = EPOLLIN;
-        event.data.fd = serverFd;
-        if (epoll_ctl(_epollFD, EPOLL_CTL_ADD, serverFd, &event) == -1) {
-            throw std::runtime_error("ERROR: epoll_ctl failed to add listening socket");
-        }
-        _listeningSockets.insert(std::make_pair(serverFd, _servers[i]));
-    }
-}
 
 void WebServer::handleNewConnection(int currentFd, const ServerConfig& config)
 {
+
+    std::cout << "\n------------------------------------------------------------------------------------------------------------------------------" << std::endl;
+    std::cout << "during NewConnection " << config._serverName[0] << std::endl;
     while (true)
     {
         struct sockaddr_in clientAddress;
@@ -139,7 +96,10 @@ void WebServer::handleClientDisconnection(int currentFd)
     close(currentFd);
     size_t erased_count = _clients.erase(currentFd);
     if (erased_count > 0)
+    {
         std::cout << "Client on fd " << currentFd << " disconnected and cleaned up." << std::endl;
+        std::cout << "------------------------------------------------------------------------------------------------------------------------------\n" << std::endl;
+    }
     else
         std::cerr << "Warning: tried to erase non-existant client for fd :" << currentFd << std::endl;
 }
@@ -235,11 +195,40 @@ void	WebServer::get(Client &currentClient) {
 	headers["Content-Length"] = intToString(static_cast<int>(body.size()));
 	headers["Connection"] = "close";
 	currentClient.generateResponse(200, headers, body);
+  }
+
+void handleDeleteRequest(Client& currentClient, const std::string& filePath)
+{
+    struct stat buffer;
+
+    if (stat(filePath.c_str(), &buffer) != 0)
+    {
+        std::cout << "Warning: cannot delete: " << filePath << std::endl;
+        throw HttpStatus(404);
+    }
+
+    if (std::remove(filePath.c_str()) == -1)
+    {
+        std::cout << "Warning: cannot delete: " << filePath << std::endl;
+        throw HttpStatus(500);
+    }
+    std::map<std::string, std::string> headers;
+    currentClient.generateResponse(204, headers, "");
+    std::cout << filePath << " successfully deleted" << std::endl;
+}
+
+void handlePostRequest(Client& currentClient, std::string uri)
+{
+    (void)currentClient;
+    (void)uri;
+
+    std::cout << "POST request received" << std::endl;
 }
 
 void WebServer::handleClientRead(int currentFd)
 {
     std::map<int, Client>::iterator it = _clients.find(currentFd);
+    Client& currentClient = it->second;
 
     if (it == _clients.end())
     {
@@ -250,12 +239,12 @@ void WebServer::handleClientRead(int currentFd)
 
     try
     {
-        Client& currentClient = it->second;
         char buffer[4096];
         ssize_t bytes_read;
 
         std::cout << "Request received on fd " << currentFd << std::endl;
         std::cout << "\n--- Request Start ---" << std::endl;
+
         while (true)
         {
             bytes_read = recv(currentFd, buffer, sizeof(buffer), 0);
@@ -274,28 +263,53 @@ void WebServer::handleClientRead(int currentFd)
                 break;
         }
         currentClient.getRequest().logRequest();
-        std::cout << "\n--- Request End ---" << std::endl;
-		if (currentClient.getRequest().getMethod() == "GET")
-			get(currentClient);
-		/*else if (currentClient.getRequest().getMethod() == "POST")
-			post(currentClient);
-		else if (currentClient.getRequest().getMethod() == "DELETE")
-			delete(currentClient);*/
 
-        //TODO: Replace by real response
-		/////////limitsthusnaotheusntaheuh i have to redo this
+        std::cout << "--- Request End ---" << std::endl;
+
+        std::string method = currentClient.getRequest().getMethod();
+        std::string uri = currentClient.getRequest().getPath();
+
+        if (method == "DELETE")
+            handleDeleteRequest(currentClient, uri);
+        else if (method == "POST")
+            handlePostRequest(currentClient, uri);
+        else if (method == "GET")
+            get(currentClient);
+
         switchToWrite(currentFd);
     }
-    catch(const std::exception& e)
+    catch(const HttpStatus& status)
     {
-        std::cerr << e.what() << '\n';
-        std::map<std::string, std::string> headers;
-        headers["Connection"] = "close";
-        it->second.generateResponse(e.what(), headers, "");
+        std::cerr << status.what() << '\n';
+        std::string									body = "";
+        std::map<std::string, std::string>			headers;
+        std::map<int, std::string>::const_iterator	itPage = currentClient.getConfig()._errorPage.find(status.getStatusCode());
+
+        if (itPage != currentClient.getConfig()._errorPage.end())
+        {
+            std::string	customPath = itPage->second;
+            std::string	fileContent;
+
+            if (fileToString(customPath, fileContent) == true)
+            {
+                headers["Content-Type"] = guessContentType(customPath);
+                body = fileContent;
+            }
+            else
+            {
+                body = generateErrorPage(status.what());
+                headers["Content-Type"] = "text/html";
+            }
+        }
+        else
+        {
+            body = generateErrorPage(status.what());
+            headers["Content-Type"] = "text/html";
+        }
+
+        currentClient.generateResponse(status.getStatusCode(), headers, body);
         switchToWrite(currentFd);
     }
-
-
 }
 
 void WebServer::run()
@@ -325,7 +339,7 @@ void WebServer::run()
                 continue ;
             }
             //la ligne fait peur mais elle cree juste un iterateur, panique pas bebou
-            std::map<int, const ServerConfig &, std::less<int>, std::allocator<std::pair<const int, const ServerConfig &> > >::iterator currentServer = _listeningSockets.find(currentFd);
+            std::map<int, const ServerConfig, std::less<int>, std::allocator<std::pair<const int, const ServerConfig> > >::iterator currentServer = _listeningSockets.find(currentFd);
             if (currentServer == _listeningSockets.end())
             {
                 if (events[i].events & EPOLLIN)
@@ -334,7 +348,52 @@ void WebServer::run()
                     handleClientWrite(currentFd);
             }
             else
+            {
                 handleNewConnection(currentFd, currentServer->second);
+            }
         }
     }
+}
+
+
+void WebServer::init()
+{
+    _epollFD = epoll_create(MAX_EVENTS);
+    if (_epollFD == -1)
+        throw std::runtime_error("ERROR:can't create epoll instance");
+
+    for (size_t i = 0; i < _servers.size(); ++i)
+    {
+        int serverFd = socket(AF_INET, SOCK_STREAM, 0);
+        if (serverFd == -1)
+            throw std::runtime_error("ERROR: could not create socket for " + _servers[i]._serverName[0]);
+
+        int opt = 1;
+        if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+            errorInit("ERROR: setsockopt failed for", _servers[i]._serverName[0], serverFd);
+
+        struct sockaddr_in serverAdress;
+        setServerAdress(serverFd, serverAdress, i);
+
+        if (bind(serverFd, (struct sockaddr*)&serverAdress, sizeof(serverAdress)) < 0)
+            errorInit("ERROR: failed to bind to port ", intToString(_servers[i]._listenOn.second), serverFd);
+
+        setNonBlocking(serverFd);
+
+        if (listen(serverFd, SOMAXCONN) < 0)
+            errorInit("ERROR: listen failed for ", _servers[i]._serverName[0], serverFd);
+
+        struct epoll_event event = {};
+        event.events = EPOLLIN;
+        event.data.fd = serverFd;
+        if (epoll_ctl(_epollFD, EPOLL_CTL_ADD, serverFd, &event) == -1) {
+            throw std::runtime_error("ERROR: epoll_ctl failed to add listening socket");
+        }
+        _listeningSockets.insert(std::make_pair(serverFd, _servers[i]));
+    }
+}
+
+const char* WebServer::signalException::what() const throw()
+{
+    return ("\nServer interrupted by signal");
 }
