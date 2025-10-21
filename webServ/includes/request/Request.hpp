@@ -52,10 +52,10 @@ class Request
 
 		// Getters
 		std::map<std::string, std::string> 	getHeaders()	const;
-		std::string 						getMethod() 	const;
-		std::string 						getPrtcl() 		const;
-		std::string 						getPath() 		const;
-		std::string 						getBody() 		const;
+		std::string 						getMethod()		const;
+		std::string 						getPrtcl()		const;
+		std::string 						getPath()		const;
+		std::string 						getBody()		const;
 		bool								getIsValid() const;
 
 		// Constructors
