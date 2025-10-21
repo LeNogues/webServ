@@ -10,6 +10,7 @@ std::map<int, std::string>	initStatusCodes(void)
 	codes[201] = "HTTP/1.1 201 Created";
 	codes[204] = "HTTP/1.1 204 No Content";
 	codes[206] = "HTTP/1.1 206 Partial Content";
+	codes[308] = "HTTP/1.1 308 Permanent Redirect";
 	codes[400] = "HTTP/1.1 400 Bad Request";
 	codes[401] = "HTTP/1.1 401 Unauthorized";
 	codes[403] = "HTTP/1.1 403 Forbidden";

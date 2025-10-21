@@ -164,6 +164,13 @@ void	getFromDir(Client &currentClient, std::string path) {
 	std::string							indexPath;
 	struct stat							info;
 
+	if (!path.empty() && path[path.size() - 1] != '/')
+    {
+        size_t start = currentClient.getConfig()._root.size();
+        headers["Location"] = path.substr(start, path.size() - start) + "/";
+        currentClient.generateResponse(308, headers, "");
+        return;
+    }
 	indexPath = path + currentClient.getDefaultFile();
 	if (stat(indexPath.c_str(), &info) == -1 || fileToString(indexPath, body) == false) {
 		if (currentClient.getAutoIndex() == false) {
