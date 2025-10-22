@@ -49,8 +49,10 @@ class Request
 	public:
 		int parseRequest(const std::string& request);
 		void logRequest();
+		void clear();
 
 		// Getters
+		std::string 						getHeader(const std::string& name) const;
 		std::map<std::string, std::string> 	getHeaders()	const;
 		std::string 						getMethod()		const;
 		std::string 						getPrtcl()		const;

@@ -114,17 +114,26 @@ void WebServer::handleClientWrite(int currentFd)
         return;
     }
 
-    ssize_t sent = it->second.sendPending();
+    Client& currentClient = it->second;
+    ssize_t sent = currentClient.sendPending();
+
     if (sent == -1)
     {
         std::cerr << "Error: send() failed for fd: " << currentFd << std::endl;
         handleClientDisconnection(currentFd);
         return;
     }
-    if (it->second.hasResponse())
+
+    if (currentClient.hasResponse())
         return;
 
-    handleClientDisconnection(currentFd);
+    if (currentClient.getShouldClose())
+        handleClientDisconnection(currentFd);
+    else
+    {
+        currentClient.getRequest().clear();
+        switchToRead(currentFd);
+    }
 }
 
 void WebServer::switchToRead(int clientFd)
@@ -166,12 +175,21 @@ void	WebServer::get(Client &currentClient) {
 	contentType = guessContentType(path);
 	if (fileToString(path, body) == false)
         throw HttpStatus(404);
-	std::cout << contentType << '\n';
+
 	headers["Content-Type"] = contentType;
 	headers["Content-Length"] = intToString(static_cast<int>(body.size()));
-	headers["Connection"] = "close";
+
+	std::string connectionHeader = currentClient.getRequest().getHeader("Connection");
+    if (connectionHeader == "close") {
+        headers["Connection"] = "close";
+        currentClient.setShouldClose(true);
+    } else {
+        headers["Connection"] = "keep-alive";
+        currentClient.setShouldClose(false);
+    }
+
 	currentClient.generateResponse(200, headers, body);
-  }
+}
 
 void handleDeleteRequest(Client& currentClient, const std::string& filePath)
 {
@@ -294,7 +312,7 @@ void WebServer::run()
 
     while(1)
     {
-        int numEvent = epoll_wait(_epollFD, events, MAX_EVENTS, -1);
+        int numEvent = epoll_wait(_epollFD, events, MAX_EVENTS, 5);
         if (numEvent == -1)
         {
             if (errno == EINTR)

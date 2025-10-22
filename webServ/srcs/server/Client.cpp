@@ -55,6 +55,16 @@ const std::string& Client::getDefaultFile()
 	return (this->_config._defaultFile);
 }
 
+bool Client::getShouldClose() const 
+{
+	return (this->_ShouldClose);
+}
+
+void Client::setShouldClose(bool state)
+{
+	_ShouldClose = state;
+}
+
 const ServerConfig& Client::getConfig()
 {
 	return (_config);
