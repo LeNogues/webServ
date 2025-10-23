@@ -291,7 +291,7 @@ void WebServer::handleClientRead(int currentFd)
         else if (method == "POST")
             handlePostRequest(currentClient, uri);
         else if (method == "GET")
-            get(currentClient);
+            handleGetRequest(currentClient);
 
         switchToWrite(currentFd);
     }
