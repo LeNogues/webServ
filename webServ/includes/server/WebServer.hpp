@@ -35,6 +35,7 @@
 # include "../request/Request.hpp"
 # include "../utils/parsePath.hpp"
 # include "../utils/setNonBlocking.hpp"
+# include "../httpGen/generateAutoIndex.hpp"
 
 
 class WebServer
