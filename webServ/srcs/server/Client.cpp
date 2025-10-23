@@ -59,6 +59,16 @@ bool	Client::getAutoIndex() {
 	return (this->_config._autoIndex);
 }
 
+bool Client::getShouldClose() const 
+{
+	return (this->_ShouldClose);
+}
+
+void Client::setShouldClose(bool state)
+{
+	_ShouldClose = state;
+}
+
 const ServerConfig& Client::getConfig()
 {
 	return (_config);
