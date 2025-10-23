@@ -1,3 +1,4 @@
+    
 <!DOCTYPE html>
 <html>
 	<head>
@@ -11,7 +12,7 @@
 				<h1>Webserv</h1>
 			</div>
 			<div class="collaborator">
-				<h2>Arthur Doireau</h2>
+				<h2><a href="https://front.adoireau.fr/">Arthur Doireau</a></h2>
 				<h2>Sebastien Le Nogues</h2>
 				<h2>Walter Beschon</h2>
 			</div>
@@ -27,7 +28,12 @@
 				<div class="POST Card">
 					<h3 class="title-card">POST</h3>
 					<p class="text-card">Post file to server</p>
-					<button class="method-button">POST</button>
+					
+					<form action="upload.php" method="post" enctype="multipart/form-data" class="upload-form">
+						<input type="file" name="monFichier" id="monFichier" required>
+						<button type="submit" class="method-button">POST</button>
+					</form>
+
 				</div>
 
 				<div class="DELETE Card">
@@ -36,7 +42,7 @@
 					
 					<input type="text" id="deleteFileInput" placeholder="Chemin du fichier (ex: /test.txt)">
 					
-					<button id="deleteButton" class="method-button">delete</button>
+					<button id="deleteButton" class="method-button">DELETE</button>
 
 					<div id="statusMessage"></div>
 				</div>
@@ -50,3 +56,5 @@
 		<script src="app.js"></script>
 	</body>
 </html>
+
+  

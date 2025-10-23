@@ -24,10 +24,15 @@ main {
     display: flex;
     gap: 1rem;
     justify-content: center;
+    size: 1rem;
 
     border: 2px solid lightgray;
     padding: 1rem;
     margin-top: 2rem;
+}
+
+.collaborator h2 a {
+    color: inherit;
 }
 
 .cards-zone {
