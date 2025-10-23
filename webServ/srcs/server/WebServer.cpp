@@ -27,285 +27,6 @@ static void errorInit(const std::string& Error, const std::string& value, const 
     throw std::runtime_error(Error + value);
 }
 
-
-static void setNonBlocking(int serverFD)
-{
-    int flags = fcntl(serverFD, F_GETFL, 0);
-    if (flags == -1)
-        throw std::runtime_error("ERROR: fcntl failed");
-
-    flags |= O_NONBLOCK;
-    int s = fcntl(serverFD, F_SETFL, flags);
-    if (s == -1)
-        throw std::runtime_error("ERROR: fcntl failed");
-}
-
-void WebServer::setServerAdress(const int& serverFd, sockaddr_in& serverAdress, size_t i)
-{
-    serverAdress.sin_family = AF_INET;
-    serverAdress.sin_port = htons(_servers[i]._listenOn.second);
-    serverAdress.sin_addr.s_addr = inet_addr(_servers[i]._listenOn.first.c_str());
-    if (serverAdress.sin_addr.s_addr == INADDR_NONE)
-        errorInit("ERROR: Adresse IP invalide: ", _servers[i]._listenOn.first, serverFd);
-}
-
-
-void WebServer::handleNewConnection(int currentFd, const ServerConfig& config)
-{
-
-    std::cout << "\n------------------------------------------------------------------------------------------------------------------------------" << std::endl;
-    std::cout << "during NewConnection " << config._serverName[0] << std::endl;
-    while (true)
-    {
-        struct sockaddr_in clientAddress;
-        socklen_t clientAddrLen = sizeof(clientAddress);
-        int clientFd = accept(currentFd, (struct sockaddr*)&clientAddress, &clientAddrLen);
-
-        if (clientFd == -1)
-        {
-            if (errno == EAGAIN || errno == EWOULDBLOCK)
-                break;
-            else
-            {
-                std::cerr << "Erreur lors de accept()" << std::endl;
-                break;
-            }
-        }
-
-        setNonBlocking(clientFd);
-
-        struct epoll_event event = {};
-        event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
-        event.data.fd = clientFd;
-        if (epoll_ctl(_epollFD, EPOLL_CTL_ADD, clientFd, &event) == -1)
-        {
-            std::cerr << "Erreur: epoll_ctl ne peut pas ajouter le client fd" << std::endl;
-            close(clientFd);
-            continue;
-        }
-
-        _clients.insert(std::make_pair(clientFd, Client(clientFd, config)));
-        std::cout << "Nouvelle connexion acceptée sur le fd: " << clientFd << std::endl;
-    }
-}
-
-void WebServer::handleClientDisconnection(int currentFd)
-{
-    if (epoll_ctl(_epollFD, EPOLL_CTL_DEL, currentFd, NULL) == -1)
-        std::cerr << "Warning: epoll-ctl(DEL) failed for fd : " << currentFd << std::endl;
-    close(currentFd);
-    size_t erased_count = _clients.erase(currentFd);
-    if (erased_count > 0)
-    {
-        std::cout << "Client on fd " << currentFd << " disconnected and cleaned up." << std::endl;
-        std::cout << "------------------------------------------------------------------------------------------------------------------------------\n" << std::endl;
-    }
-    else
-        std::cerr << "Warning: tried to erase non-existant client for fd :" << currentFd << std::endl;
-}
-
-void WebServer::handleClientWrite(int currentFd)
-{
-    std::map<int, Client>::iterator it = _clients.find(currentFd);
-    if (it == _clients.end())
-    {
-        std::cerr << "Error: write for unknown client fd: " << currentFd << std::endl;
-        handleClientDisconnection(currentFd);
-        return;
-    }
-
-    Client& currentClient = it->second;
-    ssize_t sent = currentClient.sendPending();
-
-    if (sent == -1)
-    {
-        std::cerr << "Error: send() failed for fd: " << currentFd << std::endl;
-        handleClientDisconnection(currentFd);
-        return;
-    }
-
-    if (currentClient.hasResponse())
-        return;
-
-    if (currentClient.getShouldClose())
-        handleClientDisconnection(currentFd);
-    else
-    {
-        currentClient.getRequest().clear();
-        switchToRead(currentFd);
-    }
-}
-
-void WebServer::switchToRead(int clientFd)
-{
-    epoll_event event;
-    event.data.fd = clientFd;
-    event.events = EPOLLIN;
-
-    if (epoll_ctl(_epollFD, EPOLL_CTL_MOD, clientFd, &event) == -1)
-    {
-        std::cerr << "ERROR: can't change epoll for write request on fd : " << clientFd << std::endl;
-        handleClientDisconnection(clientFd);
-    }
-}
-
-void WebServer::switchToWrite(int clientFd)
-{
-    epoll_event event;
-    event.data.fd = clientFd;
-    event.events = EPOLLOUT;
-
-    if (epoll_ctl(_epollFD, EPOLL_CTL_MOD, clientFd, &event) == -1)
-    {
-        std::cerr << "ERROR: can't change epoll for write request on fd : " << clientFd << std::endl;
-        handleClientDisconnection(clientFd);
-    }
-}
-
-#include <fcntl.h>
-#include <unistd.h>
-
-void	WebServer::get(Client &currentClient) {
-	std::string							path;
-	std::string							body;
-	std::map<std::string, std::string>	headers;
-	std::string							contentType;
-
-	path = currentClient.getRequest().getPath();
-	contentType = guessContentType(path);
-	if (fileToString(path, body) == false)
-        throw HttpStatus(404);
-
-	headers["Content-Type"] = contentType;
-	headers["Content-Length"] = intToString(static_cast<int>(body.size()));
-
-	std::string connectionHeader = currentClient.getRequest().getHeader("Connection");
-    if (connectionHeader == "close") {
-        headers["Connection"] = "close";
-        currentClient.setShouldClose(true);
-    } else {
-        headers["Connection"] = "keep-alive";
-        currentClient.setShouldClose(false);
-    }
-
-	currentClient.generateResponse(200, headers, body);
-}
-
-void handleDeleteRequest(Client& currentClient, const std::string& filePath)
-{
-    struct stat buffer;
-
-    if (stat(filePath.c_str(), &buffer) != 0)
-    {
-        std::cout << "Warning: cannot delete: " << filePath << std::endl;
-        throw HttpStatus(404);
-    }
-
-    if (std::remove(filePath.c_str()) == -1)
-    {
-        std::cout << "Warning: cannot delete: " << filePath << std::endl;
-        throw HttpStatus(500);
-    }
-    std::map<std::string, std::string> headers;
-    currentClient.generateResponse(204, headers, "");
-    std::cout << filePath << " successfully deleted" << std::endl;
-}
-
-void handlePostRequest(Client& currentClient, std::string uri)
-{
-    (void)currentClient;
-    (void)uri;
-
-    std::cout << "POST request received" << std::endl;
-}
-
-void WebServer::handleClientRead(int currentFd)
-{
-    std::map<int, Client>::iterator it = _clients.find(currentFd);
-    Client& currentClient = it->second;
-
-    if (it == _clients.end())
-    {
-        std::cerr << "Error: Received data for a non-existent client fd: " << currentFd << std::endl;
-        handleClientDisconnection(currentFd);
-        return;
-    }
-
-    try
-    {
-        char buffer[4096];
-        ssize_t bytes_read;
-
-        std::cout << "Request received on fd " << currentFd << std::endl;
-        std::cout << "\n--- Request Start ---" << std::endl;
-
-        while (true)
-        {
-            bytes_read = recv(currentFd, buffer, sizeof(buffer), 0);
-
-            if (bytes_read > 0)
-            {
-                currentClient.getRequest().parseRequest(std::string(buffer, bytes_read));
-            }
-            else if (bytes_read == 0)
-            {
-                std::cout << "Client on fd " << currentFd << " closed the connection." << std::endl;
-                handleClientDisconnection(currentFd);
-                return;
-            }
-            else
-                break;
-        }
-        currentClient.getRequest().logRequest();
-
-        std::cout << "--- Request End ---" << std::endl;
-
-        std::string method = currentClient.getRequest().getMethod();
-        std::string uri = currentClient.getRequest().getPath();
-
-        if (method == "DELETE")
-            handleDeleteRequest(currentClient, uri);
-        else if (method == "POST")
-            handlePostRequest(currentClient, uri);
-        else if (method == "GET")
-            get(currentClient);
-
-        switchToWrite(currentFd);
-    }
-    catch(const HttpStatus& status)
-    {
-        std::cerr << status.what() << '\n';
-        std::string									body = "";
-        std::map<std::string, std::string>			headers;
-        std::map<int, std::string>::const_iterator	itPage = currentClient.getConfig()._errorPage.find(status.getStatusCode());
-
-        if (itPage != currentClient.getConfig()._errorPage.end())
-        {
-            std::string	customPath = itPage->second;
-            std::string	fileContent;
-
-            if (fileToString(customPath, fileContent) == true)
-            {
-                headers["Content-Type"] = guessContentType(customPath);
-                body = fileContent;
-            }
-            else
-            {
-                body = generateErrorPage(status.what());
-                headers["Content-Type"] = "text/html";
-            }
-        }
-        else
-        {
-            body = generateErrorPage(status.what());
-            headers["Content-Type"] = "text/html";
-        }
-
-        currentClient.generateResponse(status.getStatusCode(), headers, body);
-        switchToWrite(currentFd);
-    }
-}
-
 void WebServer::run()
 {
     epoll_event events[MAX_EVENTS];
@@ -318,10 +39,7 @@ void WebServer::run()
             if (errno == EINTR)
                 continue ;
             else
-            {
-                //pensez a fermer les fd ou faire une classe de catch special
                 throw std::runtime_error("ERROR: erreur critique de epoll_wait");
-            }
         }
 
         for (int i = 0; i < numEvent; ++i)
@@ -342,11 +60,18 @@ void WebServer::run()
                     handleClientWrite(currentFd);
             }
             else
-            {
                 handleNewConnection(currentFd, currentServer->second);
-            }
         }
     }
+}
+
+void WebServer::setServerAdress(const int& serverFd, sockaddr_in& serverAdress, size_t i)
+{
+    serverAdress.sin_family = AF_INET;
+    serverAdress.sin_port = htons(_servers[i]._listenOn.second);
+    serverAdress.sin_addr.s_addr = inet_addr(_servers[i]._listenOn.first.c_str());
+    if (serverAdress.sin_addr.s_addr == INADDR_NONE)
+        errorInit("ERROR: Adresse IP invalide: ", _servers[i]._listenOn.first, serverFd);
 }
 
 

@@ -23,7 +23,7 @@ std::string	guessContentType(const std::string& path)
         mimeTypes[".avi"] = "video/x-msvideo";
         mimeTypes[".mid"] = "audio/midi";
         mimeTypes[".midi"] = "audio/midi";
-        mimeTypes[".mpeg"] = "video/mpeg";
+        mimeTypes["*-+.mpeg"] = "video/mpeg";
         mimeTypes[".oga"] = "audio/ogg";
         mimeTypes[".ogv"] = "video/ogg";
         mimeTypes[".ogx"] = "application/ogg";
