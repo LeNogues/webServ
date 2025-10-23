@@ -25,7 +25,7 @@ Config::Config(const std::string& ConfigFilePath)
         if (server._root.empty())
             server._root = "/var/www/html";
         if (server._defaultFile.empty())
-            server._defaultFile = "index.html";
+            server._defaultFile = "indx.html";
         if (server._allowedMethods.empty())
         {
             server._allowedMethods.push_back("GET");

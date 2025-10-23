@@ -335,16 +335,13 @@ void WebServer::run()
 
     while(1)
     {
-        int numEvent = epoll_wait(_epollFD, events, MAX_EVENTS, -1);
+        int numEvent = epoll_wait(_epollFD, events, MAX_EVENTS, 5);
         if (numEvent == -1)
         {
             if (errno == EINTR)
                 continue ;
             else
-            {
-                //pensez a fermer les fd ou faire une classe de catch special
                 throw std::runtime_error("ERROR: erreur critique de epoll_wait");
-            }
         }
 
         for (int i = 0; i < numEvent; ++i)
@@ -365,11 +362,18 @@ void WebServer::run()
                     handleClientWrite(currentFd);
             }
             else
-            {
                 handleNewConnection(currentFd, currentServer->second);
-            }
         }
     }
+}
+
+void WebServer::setServerAdress(const int& serverFd, sockaddr_in& serverAdress, size_t i)
+{
+    serverAdress.sin_family = AF_INET;
+    serverAdress.sin_port = htons(_servers[i]._listenOn.second);
+    serverAdress.sin_addr.s_addr = inet_addr(_servers[i]._listenOn.first.c_str());
+    if (serverAdress.sin_addr.s_addr == INADDR_NONE)
+        errorInit("ERROR: Adresse IP invalide: ", _servers[i]._listenOn.first, serverFd);
 }
 
 

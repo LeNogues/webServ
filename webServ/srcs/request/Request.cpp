@@ -74,20 +74,69 @@ void Request::splitHeader(const size_t end)
 	}
 }
 
+std::string Request::getHeader(const std::string& headerName) const
+{
+    for (std::map<std::string, std::string>::const_iterator it = _headers.begin(); it != _headers.end(); ++it)
+    {
+        if (it->first.length() == headerName.length())
+        {
+            bool match = true;
+            for (size_t i = 0; i < it->first.length(); ++i)
+            {
+                if (std::tolower(it->first[i]) != std::tolower(headerName[i]))
+                {
+                    match = false;
+                    break;
+                }
+            }
+            if (match)
+                return it->second;
+        }
+    }
+    return "";
+}
+
+void Request::clear()
+{
+    _headers.clear();
+    _request.clear();
+    _method.clear();
+    _path.clear();
+    _protocol.clear();
+    _body.clear();
+
+    _contentLength = 0;
+
+    _haveRequest = false;
+    _haveHeader = false;
+    _haveBody = false;
+    _haveTrailers = false;
+    _isChunked = false;
+    
+
+    _isValid = true;
+}
+
 void Request::checkHeader(void)
 {
-	std::map<std::string, std::string>::iterator	contentLength = _headers.find("Content-Length");
-	std::map<std::string, std::string>::iterator	transferEncoding = _headers.find("Transfer-Encoding");
+	std::map<std::string, std::string>::iterator contentLength = _headers.find("Content-Length");
+	std::map<std::string, std::string>::iterator transferEncoding = _headers.find("Transfer-Encoding");
 
-	if (_headers.find("Host") == _headers.end() || (contentLength != _headers.end() && transferEncoding != _headers.end()))
+	if (_headers.find("Host") == _headers.end())
 		throw HttpStatus(400);
-	if (contentLength == _headers.end() && transferEncoding == _headers.end())
+
+	if (contentLength != _headers.end() && transferEncoding != _headers.end())
+		throw HttpStatus(400);
+
+	if (_method == "POST")
 	{
-		_bodyNecessary = false;
-		_isValid = true;
+		_bodyNecessary = true;
+		if (contentLength == _headers.end() && transferEncoding == _headers.end())
+			throw HttpStatus(411);
 	}
-	else if (!_bodyNecessary && _request.size() > 0)
-		throw HttpStatus(411);
+	else
+		_bodyNecessary = false;
+
 	if (contentLength != _headers.end())
 	{
 		if (!strToSizeT(contentLength->second, _contentLength, 10))
@@ -95,12 +144,15 @@ void Request::checkHeader(void)
 		if (_contentLength > _config._maxSizeBody)
 			throw HttpStatus(413);
 	}
+	
 	if (transferEncoding != _headers.end())
 	{
 		if (transferEncoding->second != "chunked")
-			throw HttpStatus(400);
+			throw HttpStatus(501);
 		_isChunked = true;
 	}
+
+    _isValid = true;
 }
 
 int Request::processRequest()
@@ -198,10 +250,7 @@ int 	Request::ProcessTrailer()
 int Request::parseRequest(const std::string& request)
 {
 	_request += request;
-	if (!_bodyNecessary)
-		throw HttpStatus(411);
-	else if (_isValid)
-		throw HttpStatus(400);
+
 	if (!_haveRequest && !processRequest())
 		return (0);
 	if (!_haveHeader && !ProcessHeader())

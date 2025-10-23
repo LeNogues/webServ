@@ -35,6 +35,7 @@ class Client
         const ServerConfig&     _config;
         std::string             _response;
         Request                 _request;
+        bool                    _ShouldClose;
         int                     _clientFd;
 
         void buildResponse(std::string& response, const std::map<std::string, std::string>& headers, const std::string& body);
@@ -43,10 +44,10 @@ class Client
         Client(int clientFd, const ServerConfig& config);
         ~Client();
         Request& getRequest();
-        const std::string& getRoot();
-        const std::string& getDefaultFile();
+        const std::string&  getRoot();
+        const std::string&  getDefaultFile();
         const ServerConfig& getConfig();
-		bool				getAutoIndex();
+		    bool				getAutoIndex();
         void generateResponse(const std::string& status, const std::map<std::string, std::string>& headers, const std::string& body);
         void generateResponse(const int status, const std::map<std::string, std::string>& headers, const std::string& body);
         bool hasResponse() const;

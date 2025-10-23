@@ -21,6 +21,8 @@
 # include <vector>
 # include <cerrno>
 # include <cstdio>
+# include <fcntl.h>
+# include <unistd.h>
 # include <fstream>
 # include <sstream>
 # include <sys/stat.h>
@@ -32,6 +34,7 @@
 # include "../utils/converters.hpp"
 # include "../request/Request.hpp"
 # include "../utils/parsePath.hpp"
+# include "../utils/setNonBlocking.hpp"
 
 
 class WebServer
@@ -50,7 +53,9 @@ class WebServer
         void	 handleClientRead(int currentFd);
         void	 switchToWrite(int clientFd);
         void	 switchToRead(int clientFd);
-		void	get(Client &);
+        void     executeRequest(Client& currentClient, int& currentFd);
+        void     failedRequest(const HttpStatus& status, Client& currentClient, int& currentFd);
+		
 
     public:
         void    init();
@@ -65,5 +70,9 @@ class WebServer
         WebServer(const std::vector<ServerConfig>& configs);
         ~WebServer();
 };
+
+void handleDeleteRequest(Client& currentClient, const std::string& filePath);
+void handlePostRequest(Client& currentClient, std::string uri);
+void handleGetRequest(Client &);
 
 #endif
