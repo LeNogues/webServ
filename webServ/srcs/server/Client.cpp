@@ -55,14 +55,8 @@ const std::string& Client::getDefaultFile()
 	return (this->_config._defaultFile);
 }
 
-bool Client::getShouldClose() const 
-{
-	return (this->_ShouldClose);
-}
-
-void Client::setShouldClose(bool state)
-{
-	_ShouldClose = state;
+bool	Client::getAutoIndex() {
+	return (this->_config._autoIndex);
 }
 
 const ServerConfig& Client::getConfig()
