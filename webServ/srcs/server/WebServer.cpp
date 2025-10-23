@@ -90,7 +90,7 @@ void WebServer::init()
         int opt = 1;
         if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
             errorInit("ERROR: setsockopt failed for", _servers[i]._serverName[0], serverFd);
-
+ 
         struct sockaddr_in serverAdress;
         setServerAdress(serverFd, serverAdress, i);
 
