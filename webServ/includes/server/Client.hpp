@@ -47,11 +47,13 @@ class Client
         const std::string&  getRoot();
         const std::string&  getDefaultFile();
         const ServerConfig& getConfig();
-		    bool				getAutoIndex();
-        void generateResponse(const std::string& status, const std::map<std::string, std::string>& headers, const std::string& body);
-        void generateResponse(const int status, const std::map<std::string, std::string>& headers, const std::string& body);
-        bool hasResponse() const;
-        ssize_t sendPending();
+        bool                getShouldClose() const;
+        void                setShouldClose(bool state);
+        bool	            getAutoIndex();
+        void                generateResponse(const std::string& status, const std::map<std::string, std::string>& headers, const std::string& body);
+        void                generateResponse(const int status, const std::map<std::string, std::string>& headers, const std::string& body);
+        bool                hasResponse() const;
+        ssize_t             sendPending();
 };
 
 #endif
