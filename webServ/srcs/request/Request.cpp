@@ -15,9 +15,19 @@ void Request::addMethod(const std::string&  word)
 
 void Request::addPath(const std::string&  word)
 {
-	if (word[0] != '/' || word.find("..") != std::string::npos)
+	std::string path = word;
+	std::string query = "";
+
+	if (path.find("?") != std::string::npos)
+	{
+		query = path.substr(path.find("?") + 1);
+		path = path.substr(0, path.find("?"));
+	}
+	if (path[0] != '/' || path.find("..") != std::string::npos)
 		throw HttpStatus(400);
-	_path = _config._root + word;
+	_uri = path;
+	_path = _config._root + path;
+	_query = query;
 }
 
 void Request::addProtocol(const std::string&  word)
@@ -98,10 +108,12 @@ std::string Request::getHeader(const std::string& headerName) const
 
 void Request::clear()
 {
+    _uri.clear();
     _headers.clear();
     _request.clear();
     _method.clear();
     _path.clear();
+    _query.clear();
     _protocol.clear();
     _body.clear();
 
@@ -112,7 +124,7 @@ void Request::clear()
     _haveBody = false;
     _haveTrailers = false;
     _isChunked = false;
-    
+
 
     _isValid = true;
 }
@@ -144,7 +156,7 @@ void Request::checkHeader(void)
 		if (_contentLength > _config._maxSizeBody)
 			throw HttpStatus(413);
 	}
-	
+
 	if (transferEncoding != _headers.end())
 	{
 		if (transferEncoding->second != "chunked")
@@ -269,7 +281,10 @@ int Request::parseRequest(const std::string& request)
 
 void Request::logRequest()
 {
-	std::cout << _method << " " << _path << " " << _protocol << std::endl;
+	std::cout << _method << " " << _uri;
+	if (!_query.empty())
+		std::cout << "?" << _query;
+	std::cout << " " << _protocol << std::endl;
 	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++)
 		std::cout << it->first << ": " << it->second << std::endl;
 	std::cout << std::endl << _body << std::endl;
@@ -278,6 +293,8 @@ void Request::logRequest()
 // Getters
 std::string Request::getMethod() const{ return _method; }
 std::string Request::getPath() const{ return _path; }
+std::string Request::getUri() const{ return _uri; }
+std::string Request::getQuery() const{ return _query; }
 std::string Request::getPrtcl() const{ return _protocol; }
 std::map<std::string, std::string> Request::getHeaders() const{ return _headers; }
 std::string Request::getBody() const
@@ -296,6 +313,8 @@ Request::Request(const ServerConfig& config) : _config(config)
 	_request = "";
 	_method = "";
 	_path = "";
+	_uri = "";
+	_query = "";
 	_protocol = "";
 	_headers.clear();
 	_body = "";
@@ -320,8 +339,10 @@ Request& Request::operator=(const Request& other)
 	if (this == &other)
 		return *this;
 	this->_request = other._request;
+	this->_uri = other._uri;
 	this->_method = other._method;
 	this->_path = other._path;
+	this->_query = other._query;
 	this->_protocol = other._protocol;
 	this->_headers = other._headers;
 	this->_body = other._body;

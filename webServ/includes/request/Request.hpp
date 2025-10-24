@@ -18,9 +18,11 @@ class Request
 	private:
 		const ServerConfig&					_config;
 		std::map<std::string, std::string>	_headers;
+		std::string							_uri;
 		std::string							_request;
 		std::string							_method;
 		std::string							_path;
+		std::string							_query;
 		std::string							_protocol;
 		std::string							_body;
 		size_t								_contentLength;
@@ -55,8 +57,10 @@ class Request
 		std::string 						getHeader(const std::string& name) const;
 		std::map<std::string, std::string> 	getHeaders()	const;
 		std::string 						getMethod()		const;
+		std::string 						getUri()		const;
 		std::string 						getPrtcl()		const;
 		std::string 						getPath()		const;
+		std::string 						getQuery()		const;
 		std::string 						getBody()		const;
 		bool								getIsValid() const;
 

@@ -21,7 +21,8 @@ SRC     := 	srcs/main.cpp \
 			srcs/utils/trim.cpp \
 			srcs/utils/writeError.cpp \
 			srcs/utils/parsePath.cpp \
-			srcs/utils/setNonBlocking.cpp
+			srcs/utils/setNonBlocking.cpp \
+			srcs/server/handleFunction/handleCgi.cpp
 
 OBJ_DIR := obj
 OBJS    := $(SRC:%.cpp=$(OBJ_DIR)/%.o)

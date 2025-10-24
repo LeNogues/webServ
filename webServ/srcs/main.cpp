@@ -27,7 +27,7 @@ void signalFunction(int sig)
   throw WebServer::signalException();
 }
 
-int main(int argc, char **argv)
+int main(int argc, char **argv, char **envp)
 {
   signal(SIGINT, signalFunction);
   signal(SIGQUIT, signalFunction);
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     Config configs(argv[1]);
     const std::vector<ServerConfig>& serversConfigs = configs.getServers();
       // 2. Créer UN SEUL objet WebServer qui gère tout
-      WebServer webServer(serversConfigs);
+      WebServer webServer(serversConfigs, envp);
       // 3. Initialiser les sockets d'écoute
       webServer.init();
       // 4. Lancer la boucle d'événements principale

@@ -49,8 +49,7 @@ void	getFromDir(Client &currentClient, std::string path) {
 
 	if (!path.empty() && path[path.size() - 1] != '/')
     {
-        size_t start = currentClient.getConfig()._root.size();
-        headers["Location"] = path.substr(start, path.size() - start) + "/";
+        headers["Location"] = currentClient.getRequest().getUri() + "/";
         currentClient.generateResponse(308, headers, "");
         return;
     }

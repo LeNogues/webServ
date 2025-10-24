@@ -76,6 +76,9 @@ void WebServer::executeRequest(Client& currentClient, int& currentFd)
         std::string method = currentClient.getRequest().getMethod();
         std::string uri = currentClient.getRequest().getPath();
 
+        std::cout << "uri test: " << uri << std::endl;
+        if (uri.find(".cgi") != std::string::npos)
+            handleCgiRequest(currentClient, _envp);
         if (method == "DELETE")
             handleDeleteRequest(currentClient, uri);
         else if (method == "POST")

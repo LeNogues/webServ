@@ -12,9 +12,11 @@
 
 #include "../../includes/server/WebServer.hpp"
 
-WebServer::WebServer(const std::vector<ServerConfig>& configs)
+WebServer::WebServer(const std::vector<ServerConfig>& configs, char **envp)
     : _servers(configs)
 {
+    for (size_t i = 0; envp[i]; ++i)
+        _envp.push_back(envp[i]);
 }
 
 WebServer::~WebServer()
@@ -90,7 +92,7 @@ void WebServer::init()
         int opt = 1;
         if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
             errorInit("ERROR: setsockopt failed for", _servers[i]._serverName[0], serverFd);
- 
+
         struct sockaddr_in serverAdress;
         setServerAdress(serverFd, serverAdress, i);
 

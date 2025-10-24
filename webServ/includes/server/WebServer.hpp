@@ -36,6 +36,7 @@
 # include "../utils/parsePath.hpp"
 # include "../utils/setNonBlocking.hpp"
 # include "../httpGen/generateAutoIndex.hpp"
+# include "../server/handleCgi.hpp"
 
 
 class WebServer
@@ -46,6 +47,7 @@ class WebServer
         std::map<int, Client>               _clients;
         int                                 _epollFD;
 		std::string							_selfPath;
+		std::vector<std::string>			_envp;
 
         void	 handleNewConnection(int currentFd, const ServerConfig& config);
         void	 setServerAdress(const int& serverFd, sockaddr_in& serverAdress, size_t i);
@@ -56,7 +58,7 @@ class WebServer
         void	 switchToRead(int clientFd);
         void     executeRequest(Client& currentClient, int& currentFd);
         void     failedRequest(const HttpStatus& status, Client& currentClient, int& currentFd);
-		
+
 
     public:
         void    init();
@@ -68,7 +70,7 @@ class WebServer
                 virtual const char* what() const throw();
         };
 
-        WebServer(const std::vector<ServerConfig>& configs);
+        WebServer(const std::vector<ServerConfig>& configs, char **envp);
         ~WebServer();
 };
 
