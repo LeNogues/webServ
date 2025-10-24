@@ -112,7 +112,7 @@ static void addServerName(std::vector<std::string>& tokens, ServerConfig& newSer
         newServerConfig._serverName.push_back(tokens[i]);
 }
 
-static void addErrorPage(std::vector<std::string>& tokens, ServerConfig& newServerConfig)
+static void addErrorPage(std::vector<std::string>& tokens, CommonConfig& newConfig)
 {
     if (tokens.size() != 3)
         throw std::runtime_error("ERROR: 'error_page' directive needs two arguments (code and path).");
@@ -123,7 +123,7 @@ static void addErrorPage(std::vector<std::string>& tokens, ServerConfig& newServ
     if (ss.fail() || !ss.eof())
         throw std::runtime_error("ERROR: invalid error code in error_page directive.");
 
-    newServerConfig._errorPage.insert(std::make_pair(errorCode, tokens[2]));
+    newConfig._errorPage.insert(std::make_pair(errorCode, tokens[2]));
 }
 
 static void addMaxSize(std::vector<std::string>& tokens, CommonConfig& newConfig)
@@ -183,14 +183,7 @@ static void addCgiParam(std::vector<std::string>& tokens, CommonConfig& newConfi
 }
 
 
-static void addCgiPass(std::vector<std::string>& tokens, LocationConfig& newLocationConfig)
-{
-    if (tokens.size() != 2)
-        throw std::runtime_error("ERROR: 'cgi_pass' directive needs one argument (path to executable).");
-    newLocationConfig._cgiPass = tokens[1];
-}
-
-static void addRedirect(std::vector<std::string>& tokens, LocationConfig& newLocationConfig)
+static void addRedirect(std::vector<std::string>& tokens, CommonConfig& newConfig)
 {
     if (tokens.size() != 3)
         throw std::runtime_error("ERROR: 'return' directive needs two arguments (code and URL).");
@@ -201,14 +194,7 @@ static void addRedirect(std::vector<std::string>& tokens, LocationConfig& newLoc
     if (ss.fail() || !ss.eof())
         throw std::runtime_error("ERROR: invalid code for return directive.");
 
-    newLocationConfig._redirect = std::make_pair(code, tokens[2]);
-}
-
-static void addUploadStore(std::vector<std::string>& tokens, LocationConfig& newLocationConfig)
-{
-    if (tokens.size() != 2)
-        throw std::runtime_error("ERROR: 'upload_store' directive needs one argument.");
-    newLocationConfig._uploadStore = tokens[1];
+    newConfig._redirect = std::make_pair(code, tokens[2]);
 }
 
 static bool addCommonToken(std::vector<std::string>& tokens, CommonConfig& newConfig)
@@ -225,6 +211,10 @@ static bool addCommonToken(std::vector<std::string>& tokens, CommonConfig& newCo
         addAllowedMethods(tokens, newConfig);
     else if (tokens[0] == "cgi_param")
         addCgiParam(tokens, newConfig);
+    else if (tokens[0] == "return")
+        addRedirect(tokens, newConfig);
+    else if (tokens[0] == "error_page")
+        addErrorPage(tokens, newConfig);
     else
         return (false);
     return (true);
@@ -238,31 +228,14 @@ static void addServerToken(std::vector<std::string>& tokens, ServerConfig& newSe
         addListen(tokens, newServerConfig);
     else if (tokens[0] == "server_name")
         addServerName(tokens, newServerConfig);
-    else if (tokens[0] == "error_page")
-        addErrorPage(tokens, newServerConfig);
     else
         throw std::runtime_error("SYNTAX ERROR: " + tokens[0] + " is not a recognized directive in a server block.");
-}
-
-static void addAlias(std::vector<std::string>& tokens, LocationConfig& newLocationConfig)
-{
-    if (tokens.size() != 2)
-        throw std::runtime_error("ERROR: 'alias' directive needs one argument (a path).");
-    newLocationConfig._alias = tokens[1];
 }
 
 static void addLocationToken(std::vector<std::string>& tokens, LocationConfig& newLocationConfig)
 {
     if (addCommonToken(tokens, newLocationConfig))
         return;
-    else if (tokens[0] == "return")
-        addRedirect(tokens, newLocationConfig);
-    else if (tokens[0] == "upload_store")
-        addUploadStore(tokens, newLocationConfig);
-    else if (tokens[0] == "cgi_pass")
-        addCgiPass(tokens, newLocationConfig);
-    else if (tokens[0] == "alias")
-        addAlias(tokens, newLocationConfig);
     else
         throw std::runtime_error("SYNTAX ERROR: '" + tokens[0] + "' is not a recognized directive in a location block.");
 }

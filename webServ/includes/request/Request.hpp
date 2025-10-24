@@ -17,30 +17,34 @@ class Request
 {
 	private:
 		const ServerConfig&					_config;
-		std::map<std::string, std::string>	_headers;
-		std::string							_uri;
+		LocationConfig						_location;
 		std::string							_request;
+		std::map<std::string, std::string>	_headers;
 		std::string							_method;
+		std::string							_uri;
 		std::string							_path;
 		std::string							_query;
 		std::string							_protocol;
 		std::string							_body;
+		bool								_isValid;
 		size_t								_contentLength;
+
+		// Flags
 		bool								_haveRequest;
 		bool								_haveHeader;
 		bool								_bodyNecessary;
 		bool								_haveBody;
 		bool								_haveTrailers;
 		bool								_isChunked;
-		bool								_isValid;
 
-
-		void	checkHeader(void);
-		void	splitHeader(const size_t end);
 		void	addPath(const std::string& word);
 		void	addMethod(const std::string& word);
 		void	addProtocol(const std::string& word);
+		void	setLocation(const std::string& path);
+		void	setCommonConfig(const CommonConfig& config);
 		void	checkRequest(const std::string& request);
+		void	splitHeader(const size_t end);
+		void	checkHeader(void);
 		int 	processChunkedRequest();
 		int		validateAndSetBody();
 		int		processRequest();
@@ -58,9 +62,9 @@ class Request
 		std::map<std::string, std::string> 	getHeaders()	const;
 		std::string 						getMethod()		const;
 		std::string 						getUri()		const;
-		std::string 						getPrtcl()		const;
 		std::string 						getPath()		const;
 		std::string 						getQuery()		const;
+		std::string 						getPrtcl()		const;
 		std::string 						getBody()		const;
 		bool								getIsValid() const;
 
