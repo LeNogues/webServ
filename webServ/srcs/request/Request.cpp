@@ -26,14 +26,13 @@ void Request::setCommonConfig(const CommonConfig& config)
 		_location._autoIndex = config._autoIndex;
 }
 
-//TODO: Refacto sans while (true)
 void Request::setLocation(const std::string& path)
 {
-	_location = LocationConfig();
-	setCommonConfig(_config);
-
 	const std::map<std::string, LocationConfig>* current = &_config._location;
 	std::string search = path;
+
+	_location = LocationConfig();
+	setCommonConfig(_config);
 
 	while (true)
 	{
@@ -48,28 +47,38 @@ void Request::setLocation(const std::string& path)
 				bestMatch = &it->second;
 				break;
 			}
-			size_t slashPos = candidate.rfind("/");
-			if (slashPos == std::string::npos)
+			if (!backPath(candidate))
 				break;
-			if (slashPos == 0)
-			{
-				if (candidate == "/")
-					break;
-				candidate = "/";
-			}
-			else
-				candidate = candidate.substr(0, slashPos);
 		}
 
 		if (bestMatch == NULL)
 			break;
-
 		setCommonConfig(*bestMatch);
 		if (bestMatch->_locations.empty())
 			break;
+
 		current = &bestMatch->_locations;
 		search = path;
 	}
+}
+
+static std::string findExecutable(const std::string& path)
+{
+	std::string	executable = path;
+	struct stat	info;
+
+	while (executable.size() > 9)
+	{
+		if (stat(executable.c_str(), &info) == 0 && S_ISREG(info.st_mode))
+		{
+			if (access(executable.c_str(), X_OK) == 0)
+				return (executable);
+			else
+				throw HttpStatus(403);
+		}
+		backPath(executable);
+	}
+	throw HttpStatus(404);
 }
 
 void Request::addPath(const std::string&  word)
@@ -86,7 +95,18 @@ void Request::addPath(const std::string&  word)
 		throw HttpStatus(400);
 	setLocation(path);
 	_uri = path;
-	_path = _location._root + path;
+	if (path.substr(0, 9) == "/cgi-bin/")
+	{
+		_isCGI = true;
+		_path = findExecutable(_location._root + path);
+		if (_path.size() < path.size() + _location._root.size())
+			_secondPath = path.substr(_path.size() - _location._root.size());
+	}
+	else
+	{
+		_isCGI = false;
+		_path = _location._root + path;
+	}
 	_query = query;
 }
 
@@ -181,7 +201,7 @@ void Request::checkHeader(void)
 	{
 		if (!strToSizeT(contentLength->second, _contentLength, 10))
 			throw HttpStatus(400);
-		if (_contentLength > _config._maxSizeBody)
+		if (_contentLength > _location._maxSizeBody)
 			throw HttpStatus(413);
 	}
 
@@ -262,7 +282,7 @@ int Request::processChunkedRequest()
 		if (_request.substr(pos + 2 + chunkSize, 2) != "\r\n")
 			throw HttpStatus(400);
 		_body += _request.substr(pos + 2, chunkSize);
-		if (_body.size() > _config._maxSizeBody)
+		if (_body.size() > _location._maxSizeBody)
 			throw HttpStatus(413);
 		_request = _request.substr(pos + 2 + chunkSize + 2);
 		pos = _request.find("\r\n");
@@ -309,7 +329,6 @@ int Request::parseRequest(const std::string& request)
 
 void Request::logRequest()
 {
-	std::cout << "path: " << _path << std::endl;
 	std::cout << _method << " " << _uri;
 	if (!_query.empty())
 		std::cout << "?" << _query;
@@ -321,7 +340,6 @@ void Request::logRequest()
 
 void Request::clear()
 {
-	_location = LocationConfig();
 	_uri.clear();
 	_headers.clear();
 	_request.clear();
@@ -342,10 +360,13 @@ void Request::clear()
 }
 
 // Getters
+const LocationConfig& Request::getLocation()				const{ return _location; }
 bool Request::getIsValid()									const{ return _isValid; }
 std::string Request::getMethod()							const{ return _method; }
 std::string Request::getUri()								const{ return _uri; }
 std::string Request::getPath()								const{ return _path; }
+bool Request::getIsCGI()									const{ return _isCGI; }
+std::string Request::getSecondPath()						const{ return _secondPath; }
 std::string Request::getQuery()								const{ return _query; }
 std::string Request::getPrtcl()								const{ return _protocol; }
 std::string Request::getBody()								const{ return _body; }
@@ -403,6 +424,7 @@ Request& Request::operator=(const Request& other)
 {
 	if (this == &other)
 		return *this;
+	this->_location = other._location;
 	this->_request = other._request;
 	this->_uri = other._uri;
 	this->_method = other._method;
