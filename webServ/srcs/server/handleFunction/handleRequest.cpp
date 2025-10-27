@@ -35,6 +35,7 @@ void handleDeleteRequest(Client& currentClient, const std::string& filePath)
 void handlePostRequest(Client& currentClient, const std::vector<std::string>& envp)
 {
     std::cout << "POST request identified as CGI, calling handleCgiRequest." << std::endl;
+	std::cout << "post Path:" << currentClient.getRequest().getPath() << std::endl;
     handleCgiRequest(currentClient, envp);
 }
 

@@ -28,7 +28,7 @@ struct CommonConfig {
     unsigned long                           _maxSizeBody;
     bool                                    _autoIndex;
 
-    CommonConfig() : _maxSizeBody(1000000), _autoIndex(false) {}
+    CommonConfig() : _maxSizeBody(100000), _autoIndex(false) {}
 };
 
 struct LocationConfig : public CommonConfig
