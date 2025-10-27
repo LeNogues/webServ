@@ -2,8 +2,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     // === DELETE HANDLER ===
     const deleteBtn = document.getElementById('deleteButton');
-    const statusDiv = document.getElementById('statusMessage');
-    const deleteFileInput = document.getElementById('deleteFileInput');
+    const statusDiv = document.getElementById('statusMessageDelete');
+    const deleteFileInput = document.getElementById('deleteFileInput'); 
+
 
     deleteBtn.addEventListener('click', () => {
         const filePathToDelete = deleteFileInput.value;
@@ -67,3 +68,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+
+    const uploadForm = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('monFichier');
+    const statusMessage = document.getElementById('statusMessagePost');
+
+    uploadForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const file = fileInput.files[0];
+
+        if (!file) {
+            statusMessage.textContent = 'Veuillez sélectionner un fichier à envoyer.';
+            statusMessage.style.color = 'red';
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('monFichier', file);
+
+        statusMessage.textContent = 'Téléversement en cours...';
+        statusMessage.style.color = 'black';
+
+        fetch('/cgi/bin/upload.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erreur serveur : ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                statusMessage.textContent = data.message;
+                statusMessage.style.color = 'green';
+            } else {
+                statusMessage.textContent = 'Erreur : ' + data.message;
+                statusMessage.style.color = 'red';
+            }
+        })
+        .catch(error => {
+            console.error('Erreur lors de l\'envoi du fichier:', error);
+            statusMessage.textContent = 'Une erreur est survenue lors de la communication avec le serveur.';
+            statusMessage.style.color = 'red';
+        });
+    });
+});

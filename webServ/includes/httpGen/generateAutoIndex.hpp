@@ -8,6 +8,6 @@
 #include <sys/stat.h>
 #include "../httpGen/httpStatus.hpp"
 
-std::string generateAutoIndex(const std::string& path);
+std::string generateAutoIndex(const std::string &path);
 
 #endif
