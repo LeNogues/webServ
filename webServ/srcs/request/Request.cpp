@@ -1,38 +1,10 @@
 #include "../../includes/request/Request.hpp"
 
-void Request::setCommonConfig(const CommonConfig& config)
-{
-	if (config._redirect.first != 0)
-		_location._redirect = config._redirect;
-	if (!config._errorPage.empty())
-	{
-		for (std::map<int, std::string>::const_iterator it = config._errorPage.begin(); it != config._errorPage.end(); ++it)
-			_location._errorPage[it->first] = it->second;
-	}
-	if (!config._cgiParams.empty())
-	{
-		for (std::map<std::string, std::string>::const_iterator it = config._cgiParams.begin(); it != config._cgiParams.end(); ++it)
-			_location._cgiParams[it->first] = it->second;
-	}
-	if (!config._allowedMethods.empty())
-		_location._allowedMethods = config._allowedMethods;
-	if (!config._root.empty())
-		_location._root = config._root;
-	if (!config._defaultFile.empty())
-		_location._defaultFile = config._defaultFile;
-	if (config._maxSizeBody != 1000000)
-		_location._maxSizeBody = config._maxSizeBody;
-	if (config._autoIndex)
-		_location._autoIndex = config._autoIndex;
-}
-
 void Request::setLocation(const std::string& path)
 {
 	const std::map<std::string, LocationConfig>* current = &_config._location;
 	std::string search = path;
-
-	_location = LocationConfig();
-	setCommonConfig(_config);
+	static_cast<CommonConfig&>(_location) = _config;
 
 	while (true)
 	{
@@ -53,7 +25,7 @@ void Request::setLocation(const std::string& path)
 
 		if (bestMatch == NULL)
 			break;
-		setCommonConfig(*bestMatch);
+		_location = *bestMatch;
 		if (bestMatch->_locations.empty())
 			break;
 
@@ -84,6 +56,7 @@ static std::string findExecutable(const std::string& path)
 void Request::addPath(const std::string&  word)
 {
 	std::string path = word;
+	std::string truePath;
 	std::string query = "";
 
 	if (path.find("?") != std::string::npos)
@@ -95,17 +68,22 @@ void Request::addPath(const std::string&  word)
 		throw HttpStatus(400);
 	setLocation(path);
 	_uri = path;
+
+	if (!_location._alias.second.empty())
+		truePath = _location._alias.second + path.substr(path.find(_location._alias.first) + _location._alias.first.size());
+	else
+		truePath = _location._root + path;
 	if (path.substr(0, 9) == "/cgi-bin/")
 	{
 		_isCGI = true;
-		_path = findExecutable(_location._root + path);
-		if (_path.size() < path.size() + _location._root.size())
-			_secondPath = path.substr(_path.size() - _location._root.size());
+		_path = findExecutable(truePath);
+		if (_path.size() < truePath.size())
+			_secondPath = truePath.substr(_path.size());
 	}
 	else
 	{
 		_isCGI = false;
-		_path = _location._root + path;
+		_path = truePath;
 	}
 	_query = query;
 }

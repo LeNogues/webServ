@@ -20,8 +20,10 @@
 			<div class="cards-zone">
 				<!-- GET CARD -->
 				<div class="GET Card">
-					<h3 class="title-card">GET</h3>
-					<p class="text-card">Get file from server</p>
+					<div class="header-card">
+						<h3 class="title-card">GET</h3>
+						<p class="text-card">Get file from server</p>
+					</div>
 					<input type="text" id="getFileInput" placeholder="Chemin du fichier (ex: /index.html)">
 					<button id="getButton" class="method-button">GET</button>
 					<div id="getStatusMessage"></div>
@@ -29,22 +31,25 @@
 
 				<!-- POST CARD -->
 				<div class="POST Card">
-					<h3 class="title-card">POST</h3>
-					<p class="text-card">Post file to server</p>
-					
+					<div class="header-card">
+						<h3 class="title-card">POST</h3>
+						<p class="text-card">Post file to server</p>
+					</div>
+
 					<form id="uploadForm" enctype="multipart/form-data">
 						<input type="file" name="monFichier" id="monFichier" required>
 						<button type="submit" class="method-button">POST</button>
 
 						<div id="statusMessagePost"></div>
 					</form>
-
 				</div>
 
 				<!-- DELETE CARD -->
 				<div class="DELETE Card">
-					<h3 class="title-card">DELETE</h3>
-					<p class="text-card">Delete file from server</p>
+					<div class="header-card">
+						<h3 class="title-card">DELETE</h3>
+						<p class="text-card">Delete file from server</p>
+					</div>
 					<input type="text" id="deleteFileInput" placeholder="Chemin du fichier (ex: /test.txt)">
 					<button id="deleteButton" class="method-button">DELETE</button>
 
@@ -59,7 +64,7 @@
 			</section>
 		</main>
 
-		<footer class="main-footer">
+		<footer>
 			<h6>Maybe a footer wasn't necessary...</h6>
 		</footer>
 

@@ -57,6 +57,7 @@ class Client
         void                              generateResponse(const int status, const std::map<std::string, std::string>& headers, const std::string& body);
         bool                              hasResponse() const;
         ssize_t                           sendPending();
+        std::string                       genAbsPath(const std::string& path);
 };
 
 #endif

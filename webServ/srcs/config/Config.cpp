@@ -12,7 +12,7 @@
 
 #include "Config.hpp"
 
-static LocationConfig parseLocationBlock(std::ifstream& configFile, const CommonConfig& parentConfig);
+static LocationConfig parseLocationBlock(std::ifstream& configFile, const std::string& parentPath, const CommonConfig& parentConfig);
 
 #pragma region Cannonical Class
 
@@ -146,6 +146,8 @@ static void addRoot(std::vector<std::string>& tokens, CommonConfig& newConfig)
     if (tokens.size() != 2)
         throw std::runtime_error("ERROR: 'root' directive needs one argument.");
     newConfig._root = tokens[1];
+    if (newConfig._root.empty() || newConfig._root[0] != '/')
+        throw std::runtime_error("ERROR: 'root' directive needs a valid path.");
 }
 
 static void addAutoIndex(std::vector<std::string>& tokens, CommonConfig& newConfig)
@@ -221,6 +223,15 @@ static bool addCommonToken(std::vector<std::string>& tokens, CommonConfig& newCo
     return (true);
 }
 
+static void addAlias(std::vector<std::string>& tokens, const std::string& parentPath, LocationConfig& newLocationConfig)
+{
+    if (tokens.size() != 2)
+        throw std::runtime_error("ERROR: 'alias' directive needs one argument.");
+    newLocationConfig._alias = std::make_pair(parentPath, tokens[1]);
+    if (newLocationConfig._alias.second.empty() || newLocationConfig._alias.second[0] != '/')
+        throw std::runtime_error("ERROR: 'alias' directive needs a valid path.");
+}
+
 static void addServerToken(std::vector<std::string>& tokens, ServerConfig& newServerConfig)
 {
     if (addCommonToken(tokens, newServerConfig))
@@ -233,17 +244,19 @@ static void addServerToken(std::vector<std::string>& tokens, ServerConfig& newSe
         throw std::runtime_error("SYNTAX ERROR: " + tokens[0] + " is not a recognized directive in a server block.");
 }
 
-static void addLocationToken(std::vector<std::string>& tokens, LocationConfig& newLocationConfig)
+static void addLocationToken(std::vector<std::string>& tokens, const std::string& parentPath, LocationConfig& newLocationConfig)
 {
     if (addCommonToken(tokens, newLocationConfig))
         return;
+    else if (tokens[0] == "alias")
+        addAlias(tokens, parentPath, newLocationConfig);
     else
         throw std::runtime_error("SYNTAX ERROR: '" + tokens[0] + "' is not a recognized directive in a location block.");
 }
 
 #pragma endregion
 
-static LocationConfig parseLocationBlock(std::ifstream& configFile, const CommonConfig& parentConfig)
+static LocationConfig parseLocationBlock(std::ifstream& configFile, const std::string& parentPath, const CommonConfig& parentConfig)
 {
     LocationConfig newLocationConfig;
     static_cast<CommonConfig&>(newLocationConfig) = parentConfig;
@@ -267,11 +280,11 @@ static LocationConfig parseLocationBlock(std::ifstream& configFile, const Common
             if (tokens.size() < 3 || tokens.back() != "{")
                 throw std::runtime_error("ERROR: 'location' must be followed by a path and '{'");
             path = tokens[1];
-            LocationConfig nestedLocation = parseLocationBlock(configFile, newLocationConfig);
+            LocationConfig nestedLocation = parseLocationBlock(configFile, path, newLocationConfig);
             newLocationConfig._locations.insert(std::make_pair(path, nestedLocation));
         }
         else
-            addLocationToken(tokens, newLocationConfig);
+            addLocationToken(tokens, parentPath, newLocationConfig);
     }
     throw std::runtime_error("ERROR: location block needs a '}' at the end");
 }
@@ -298,7 +311,7 @@ static ServerConfig parseServerBlock(std::ifstream& configFile)
             if (tokens.size() < 3 || tokens.back() != "{")
                 throw std::runtime_error("ERROR: 'location' must be followed by a path and '{'");
             path = tokens[1];
-            LocationConfig newLocation = parseLocationBlock(configFile, newServerConfig);
+            LocationConfig newLocation = parseLocationBlock(configFile, path, newServerConfig);
             newServerConfig._location.insert(std::make_pair(path, newLocation));
         }
         else

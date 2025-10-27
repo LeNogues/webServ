@@ -23,12 +23,13 @@ struct CommonConfig {
     std::map<int, std::string>              _errorPage;
     std::map<std::string, std::string>      _cgiParams;
     std::vector<std::string>                _allowedMethods;
+    std::pair<std::string, std::string>     _alias;
     std::string                             _root;
     std::string                             _defaultFile;
     unsigned long                           _maxSizeBody;
     bool                                    _autoIndex;
 
-    CommonConfig() : _maxSizeBody(1000000), _autoIndex(false) {}
+    CommonConfig() : _alias(std::make_pair("", "")), _maxSizeBody(1000000), _autoIndex(false) {}
 };
 
 struct LocationConfig : public CommonConfig
