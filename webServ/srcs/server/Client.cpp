@@ -47,19 +47,19 @@ void Client::buildResponse(std::string& response, const std::map<std::string, st
 
 const std::string& Client::getRoot()
 {
-	return (this->_config._root);
+	return (this->_location._root);
 }
 
 const std::string& Client::getDefaultFile()
 {
-	return (this->_config._defaultFile);
+	return (this->_location._defaultFile);
 }
 
 bool	Client::getAutoIndex() {
-	return (this->_config._autoIndex);
+	return (this->_location._autoIndex);
 }
 
-bool Client::getShouldClose() const 
+bool Client::getShouldClose() const
 {
 	return (this->_ShouldClose);
 }
@@ -69,10 +69,21 @@ void Client::setShouldClose(bool state)
 	_ShouldClose = state;
 }
 
+void Client::setLocation(const LocationConfig& location)
+{
+	_location = location;
+}
+
 const ServerConfig& Client::getConfig()
 {
 	return (_config);
 }
+
+const std::map<int, std::string>& Client::getErrorPage()
+{
+	return (_location._errorPage);
+}
+
 void Client::generateResponse(const std::string& status, const std::map<std::string, std::string>& headers, const std::string& body)
 {
 	_response = status + "\r\n";

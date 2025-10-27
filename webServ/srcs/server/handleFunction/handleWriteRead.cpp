@@ -67,6 +67,7 @@ void WebServer::executeRequest(Client& currentClient, int& currentFd)
             else
                 break;
         }
+        currentClient.setLocation(currentClient.getRequest().getLocation());
         currentClient.getRequest().logRequest();
 
         std::cout << "--- Request End ---" << std::endl;
@@ -74,8 +75,7 @@ void WebServer::executeRequest(Client& currentClient, int& currentFd)
         std::string method = currentClient.getRequest().getMethod();
         std::string uri = currentClient.getRequest().getPath();
 
-        std::cout << "uri test: " << uri << std::endl;
-        if (uri.find(".cgi") != std::string::npos)
+        if (currentClient.getRequest().getIsCGI())
             handleCgiRequest(currentClient, _envp);
         else if (method == "DELETE")
             handleDeleteRequest(currentClient, uri);
@@ -92,8 +92,8 @@ void WebServer::failedRequest(const HttpStatus& status, Client& currentClient, i
     std::cerr << status.what() << '\n';
     std::string									body = "";
     std::map<std::string, std::string>			headers;
-    std::map<int, std::string>::const_iterator	itPage = currentClient.getConfig()._errorPage.find(status.getStatusCode());
-    if (itPage != currentClient.getConfig()._errorPage.end())
+    std::map<int, std::string>::const_iterator	itPage = currentClient.getErrorPage().find(status.getStatusCode());
+    if (itPage != currentClient.getErrorPage().end())
     {
         std::string	customPath = itPage->second;
         std::string	fileContent;
