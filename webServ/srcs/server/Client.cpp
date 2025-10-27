@@ -15,6 +15,7 @@
 Client::Client(int clientFd, const ServerConfig& config)
 	: _config(config), _response(""), _request(_config), _clientFd(clientFd)
 {
+	_ShouldClose = 1;
 }
 
 Client::~Client()
