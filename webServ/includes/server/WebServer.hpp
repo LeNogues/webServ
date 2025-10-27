@@ -75,7 +75,7 @@ class WebServer
 };
 
 void handleDeleteRequest(Client& currentClient, const std::string& filePath);
-void handlePostRequest(Client& currentClient, std::string uri);
+void handlePostRequest(Client& currentClient, const std::vector<std::string>& envp);
 void handleGetRequest(Client &);
 
 #endif

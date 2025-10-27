@@ -35,6 +35,7 @@ Config::Config(const std::string& ConfigFilePath)
             server._listenOn = std::make_pair("0.0.0.0", 80);
     }
 }
+
 Config::~Config()
 {
 }

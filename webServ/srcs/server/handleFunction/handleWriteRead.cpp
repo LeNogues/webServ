@@ -57,9 +57,7 @@ void WebServer::executeRequest(Client& currentClient, int& currentFd)
             bytes_read = recv(currentFd, buffer, sizeof(buffer), 0);
 
             if (bytes_read > 0)
-            {
                 currentClient.getRequest().parseRequest(std::string(buffer, bytes_read));
-            }
             else if (bytes_read == 0)
             {
                 std::cout << "Client on fd " << currentFd << " closed the connection." << std::endl;
@@ -79,10 +77,10 @@ void WebServer::executeRequest(Client& currentClient, int& currentFd)
         std::cout << "uri test: " << uri << std::endl;
         if (uri.find(".cgi") != std::string::npos)
             handleCgiRequest(currentClient, _envp);
-        if (method == "DELETE")
+        else if (method == "DELETE")
             handleDeleteRequest(currentClient, uri);
         else if (method == "POST")
-            handlePostRequest(currentClient, uri);
+            handlePostRequest(currentClient, _envp);
         else if (method == "GET")
             handleGetRequest(currentClient);
 

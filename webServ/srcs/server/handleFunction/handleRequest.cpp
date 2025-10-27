@@ -32,11 +32,10 @@ void handleDeleteRequest(Client& currentClient, const std::string& filePath)
     std::cout << filePath << " successfully deleted" << std::endl;
 }
 
-void handlePostRequest(Client& currentClient, std::string uri)
+void handlePostRequest(Client& currentClient, const std::vector<std::string>& envp)
 {
-    (void)currentClient;
-    (void)uri;
-    std::cout << "POST request received" << std::endl;
+    std::cout << "POST request identified as CGI, calling handleCgiRequest." << std::endl;
+    handleCgiRequest(currentClient, envp);
 }
 
 void	getFromDir(Client &currentClient, std::string path) {

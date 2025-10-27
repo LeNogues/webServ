@@ -29,9 +29,11 @@
 					<h3 class="title-card">POST</h3>
 					<p class="text-card">Post file to server</p>
 					
-					<form action="upload.php" method="post" enctype="multipart/form-data" class="upload-form">
+					<form id="uploadForm" enctype="multipart/form-data">
 						<input type="file" name="monFichier" id="monFichier" required>
 						<button type="submit" class="method-button">POST</button>
+
+						<div id="statusMessagePost"></div>
 					</form>
 
 				</div>
@@ -44,7 +46,7 @@
 					
 					<button id="deleteButton" class="method-button">DELETE</button>
 
-					<div id="statusMessage"></div>
+					<div id="statusMessageDelete"></div>
 				</div>
 
 			</div>
