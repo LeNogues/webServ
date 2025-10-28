@@ -48,6 +48,8 @@ void Client::buildResponse(std::string& response, const std::map<std::string, st
 
 const std::string& Client::getRoot()
 {
+	if (!_location._alias.second.empty())
+		return (_location._alias.second);
 	return (this->_location._root);
 }
 
