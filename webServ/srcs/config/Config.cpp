@@ -18,6 +18,12 @@ static LocationConfig parseLocationBlock(std::ifstream& configFile, const std::s
 
 Config::Config(const std::string& ConfigFilePath)
 {
+    if (ConfigFilePath[ConfigFilePath.size() - 1] != 'f')
+        if (ConfigFilePath[ConfigFilePath.size() - 2] != 'n')
+            if (ConfigFilePath[ConfigFilePath.size() - 3] != 'o')
+                if (ConfigFilePath[ConfigFilePath.size() - 4] != 'c')
+                    if (ConfigFilePath[ConfigFilePath.size() - 5] != '.')
+                        throw std::runtime_error("ERROR: bad extension for config file");
     this->parseConfig(ConfigFilePath);
     for (std::vector<ServerConfig>::iterator it = this->_servers.begin(); it != this->_servers.end(); ++it)
     {
