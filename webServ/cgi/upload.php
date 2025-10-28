@@ -1,14 +1,15 @@
 #!/usr/bin/php-cgi
 <?php
 
+
 header("Content-Type: application/json");
 
 $response = ['success' => false, 'message' => 'Une erreur inconnue est survenue.'];
 
 if (isset($_FILES['monFichier'])) {
-    $uploadDir = 'uploads/';
+    $uploadDir = getenv('PATH_TRANSLATED');
     $uploadFile = $uploadDir . basename($_FILES['monFichier']['name']);
-
+    
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }
@@ -35,4 +36,3 @@ if (isset($_FILES['monFichier'])) {
 echo json_encode($response);
 ?>
 
-  

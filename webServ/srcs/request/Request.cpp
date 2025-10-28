@@ -86,6 +86,7 @@ void Request::addPath(const std::string&  word)
 	std::string path = word;
 	std::string query = "";
 
+	std::cout << "test this word:" << word << std::endl;
 	if (path.find("?") != std::string::npos)
 	{
 		query = path.substr(path.find("?") + 1);
@@ -310,7 +311,7 @@ int 	Request::ProcessTrailer()
 int Request::parseRequest(const std::string& request)
 {
 	_request += request;
-
+	
 	if (!_haveRequest && !processRequest())
 		return (0);
 	if (!_haveHeader && !ProcessHeader())
@@ -392,6 +393,17 @@ std::string Request::getHeader(const std::string& headerName) const
 	}
 	return "";
 }
+
+void								Request::setSecondPath(std::string newPath)
+{
+	_secondPath = newPath;
+}
+
+void								Request::setPath(std::string newPath)
+{
+	_path = newPath;
+}
+
 
 // Constructor
 Request::Request(const ServerConfig& config) : _config(config)

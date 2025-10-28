@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMessage.textContent = 'Téléversement en cours...';
         statusMessage.style.color = 'black';
 
-        fetch('/cgi-bin/upload.php', {
+        fetch('/content/img/', {
             method: 'POST',
             body: formData
         })

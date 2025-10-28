@@ -36,7 +36,11 @@ void handlePostRequest(Client& currentClient, const std::vector<std::string>& en
 {
     std::cout << "POST request identified as CGI, calling handleCgiRequest." << std::endl;
 	std::cout << "post Path:" << currentClient.getRequest().getPath() << std::endl;
-    handleCgiRequest(currentClient, envp);
+    currentClient.getRequest().setSecondPath(currentClient.getRequest().getUri()); 
+	currentClient.getRequest().setPath("./cgi/upload.php");
+	std::cerr << "SecondPath:" << currentClient.getRequest().getSecondPath() << std::endl;
+	std::cerr << "Path:"  << currentClient.getRequest().getPath() << std::endl;
+	handleCgiRequest(currentClient, envp);
 }
 
 void	getFromDir(Client &currentClient, std::string path) {
