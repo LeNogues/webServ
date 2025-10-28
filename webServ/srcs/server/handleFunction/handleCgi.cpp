@@ -22,6 +22,8 @@ static char **createEnv(Client& currentClient, std::vector<std::string> env)
 	env.push_back("SERVER_PROTOCOL=HTTP/1.1");
 	env.push_back("SERVER_SOFTWARE=webserv/1.0");
 	env.push_back("REQUEST_URI=" + currentClient.getRequest().getUri());
+    env.push_back("REDIRECT_STATUS=200");
+    env.push_back("SCRIPT_FILENAME=" + currentClient.getRequest().getPath());
 
 	char **envp = new char*[env.size() + 1];
 	size_t i = 0;
@@ -67,6 +69,7 @@ void createHeaders(std::string line, std::map<std::string, std::string>& headers
 
 void CreateEnvAndExecute(Client &currentClient, std::vector<std::string> &env, Request &request, const char *test, int pipeOut[2], int pipeIn[2])
 {
+    (void)request;
     char **envp = createEnv(currentClient, env);
     std::string path_str = request.getPath();
     const char *path = path_str.c_str();
@@ -76,6 +79,7 @@ void CreateEnvAndExecute(Client &currentClient, std::vector<std::string> &env, R
     dup2(pipeIn[0], STDIN_FILENO);
     closeAllFd(pipeOut, pipeIn);
 
+    std::cerr << "path : " << path << std::endl;
     execve(path, const_cast<char *const *>(argv), envp);
 
     perror("execve");

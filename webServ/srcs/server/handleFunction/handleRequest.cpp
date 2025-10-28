@@ -35,7 +35,12 @@ void handleDeleteRequest(Client& currentClient, const std::string& filePath)
 void handlePostRequest(Client& currentClient, const std::vector<std::string>& envp)
 {
     std::cout << "POST request identified as CGI, calling handleCgiRequest." << std::endl;
-    handleCgiRequest(currentClient, envp);
+	std::cout << "post Path:" << currentClient.getRequest().getPath() << std::endl;
+    currentClient.getRequest().setSecondPath(currentClient.getRequest().getUri()); 
+	currentClient.getRequest().setPath("./cgi/upload.php");
+	std::cerr << "SecondPath:" << currentClient.getRequest().getSecondPath() << std::endl;
+	std::cerr << "Path:"  << currentClient.getRequest().getPath() << std::endl;
+	handleCgiRequest(currentClient, envp);
 }
 
 void	getFromDir(Client &currentClient, std::string path) {
