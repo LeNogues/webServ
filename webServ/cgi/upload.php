@@ -9,13 +9,14 @@ $response = ['success' => false, 'message' => 'Une erreur inconnue est survenue.
 if (isset($_FILES['monFichier'])) {
     $uploadDir = getenv('PATH_TRANSLATED');
     $uploadFile = $uploadDir . basename($_FILES['monFichier']['name']);
-    
+
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }
 
     if ($_FILES['monFichier']['error'] === UPLOAD_ERR_OK) {
         if (move_uploaded_file($_FILES['monFichier']['tmp_name'], $uploadFile)) {
+            chmod($uploadFile, 0744);
             $response['success'] = true;
             $response['message'] = "Le fichier " . htmlspecialchars(basename($_FILES['monFichier']['name'])) . " a été téléversé.";
         } else {

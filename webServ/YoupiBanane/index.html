@@ -12,51 +12,48 @@
 			</div>
 			<div class="collaborator">
 				<h2>Arthur Doireau</h2>
-				<h2>Sebastien Le Nogues</h2>
+				<h2>Sesbastien Le Nogues</h2>
 				<h2>Walter Beschon</h2>
 			</div>
 		</header>
 		<main>
 			<div class="cards-zone">
-				<div class="GET Card">
-					<div class="header-card">
-						<h3 class="title-card">GET</h3>
-						<p class="text-card">Get file from server</p>
+				<div class="card">
+					<div class="cart_header">
+						<h3 class="card__title">GET</h3>
+						<p class="card__desc">Get file from server</p>
 					</div>
-					<input type="text" id="getFileInput" placeholder="Chemin du fichier (ex: /index.html)">
-					<button id="getButton" class="method-button">GET</button>
-					<div id="getStatusMessage"></div>
+					<input type="text" id="inputGetPath" placeholder="Chemin du fichier (ex: /index.html)">
+					<button id="btnGet" class="btn">GET</button>
+					<div id="statusGet" class="status"></div>
 				</div>
 
-				<div class="POST Card">
-					<div class="header-card">
-						<h3 class="title-card">POST</h3>
-						<p class="text-card">Post file to server</p>
+				<div class="card">
+					<div class="cart_header">
+						<h3 class="card__title">POST</h3>
+						<p class="card__desc">Post file to server</p>
 					</div>
-
-					<form id="uploadForm" enctype="multipart/form-data">
-						<input type="file" name="monFichier" id="monFichier" required>
-						<button type="submit" class="method-button">POST</button>
-
-						<div id="statusMessagePost"></div>
+					<form id="formUpload" enctype="multipart/form-data">
+						<input type="file" name="monFichier" id="inputUploadFile" required>
+						<button type="submit" class="btn">POST</button>
+						<div id="statusUpload" class="status"></div>
 					</form>
 				</div>
 
-				<div class="DELETE Card">
-					<div class="header-card">
-						<h3 class="title-card">DELETE</h3>
-						<p class="text-card">Delete file from server</p>
+				<div class="card">
+					<div class="cart_header">
+						<h3 class="card__title">DELETE</h3>
+						<p class="card__desc">Delete file from server</p>
 					</div>
-					<input type="text" id="deleteFileInput" placeholder="Chemin du fichier (ex: /test.txt)">
-					<button id="deleteButton" class="method-button">DELETE</button>
-
-					<div id="statusMessageDelete"></div>
+					<input type="text" id="inputDeletePath" placeholder="Chemin du fichier (ex: /test.txt)">
+					<button id="btnDelete" class="btn">DELETE</button>
+					<div id="statusDelete" class="status"></div>
 				</div>
 			</div>
 
 			<section id="getResultSection">
 				<h3>Résultat du GET</h3>
-				<iframe id="getResultFrame" style="width:100%;height:400px;border:1px solid #ccc;"></iframe>
+				<iframe id="iframeGetResult" style="width:100%;height:400px;border:1px solid #ccc;"></iframe>
 			</section>
 		</main>
 
