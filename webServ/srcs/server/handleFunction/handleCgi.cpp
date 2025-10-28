@@ -29,7 +29,6 @@ static char **createEnv(Client& currentClient, std::vector<std::string> env)
 	size_t i = 0;
 	for (std::vector<std::string>::iterator it = env.begin(); it != env.end(); it++)
 	{
-		// std::cout << "env: " << it->c_str() << std::endl;
 		envp[i] = new char[it->size() + 1];
 		std::strcpy(envp[i], it->c_str());
 		i++;
@@ -165,8 +164,3 @@ void handleCgiRequest(Client& currentClient, std::vector<std::string> env)
     }
     return ;
 }
-
-
-
-
-// localhost:8080/test.cgi

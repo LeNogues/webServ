@@ -13,6 +13,7 @@ SRC     := 	srcs/main.cpp \
 			srcs/server/Client.cpp \
 			srcs/server/Server.cpp \
 			srcs/server/WebServer.cpp \
+			srcs/server/handleFunction/handleCgi.cpp \
 			srcs/server/handleFunction/handleConnection.cpp \
 			srcs/server/handleFunction/handleRequest.cpp \
 			srcs/server/handleFunction/handleWriteRead.cpp \
@@ -21,8 +22,7 @@ SRC     := 	srcs/main.cpp \
 			srcs/utils/trim.cpp \
 			srcs/utils/writeError.cpp \
 			srcs/utils/parsePath.cpp \
-			srcs/utils/setNonBlocking.cpp \
-			srcs/server/handleFunction/handleCgi.cpp
+			srcs/utils/setNonBlocking.cpp
 
 OBJ_DIR := obj
 OBJS    := $(SRC:%.cpp=$(OBJ_DIR)/%.o)

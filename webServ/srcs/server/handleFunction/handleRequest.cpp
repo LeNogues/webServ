@@ -36,7 +36,7 @@ void handlePostRequest(Client& currentClient, const std::vector<std::string>& en
 {
     std::cout << "POST request identified as CGI, calling handleCgiRequest." << std::endl;
 	std::cout << "post Path:" << currentClient.getRequest().getPath() << std::endl;
-    currentClient.getRequest().setSecondPath(currentClient.getRequest().getUri()); 
+    currentClient.getRequest().setSecondPath(currentClient.getRequest().getUri());
 	currentClient.getRequest().setPath("./cgi/upload.php");
 	std::cerr << "SecondPath:" << currentClient.getRequest().getSecondPath() << std::endl;
 	std::cerr << "Path:"  << currentClient.getRequest().getPath() << std::endl;
@@ -79,23 +79,14 @@ void	getFromDir(Client &currentClient, std::string path) {
 void	getFromFile(Client &currentClient, std::string path) {
 
 	std::map<std::string, std::string>	headers;
-
 	std::string							contentType;
-
 	std::string							body;
 
-
-
 	contentType = guessContentType(path);
-
 	if (fileToString(path, body) == false)
-
         throw HttpStatus(404);
-
 	headers["Content-Type"] = contentType;
-
 	currentClient.generateResponse(200, headers, body);
-
 }
 
 void	handleGetRequest(Client &currentClient) {
@@ -105,25 +96,16 @@ void	handleGetRequest(Client &currentClient) {
 	struct stat							info;
 
 
-
 	path = currentClient.getRequest().getPath();
-
+	std::cout << "path: " << path << std::endl;
 	if (stat(path.c_str(), &info) == -1)
-
 		throw HttpStatus(404);
-
 	if (S_ISDIR(info.st_mode)) {
-
 		getFromDir(currentClient, path);
-
 	} else if (S_ISREG(info.st_mode)) {
-
 		getFromFile(currentClient, path);
-
 	} else {
-
 		throw HttpStatus(404);
-
 	}
 
 }

@@ -59,7 +59,6 @@ void Request::addPath(const std::string&  word)
 	std::string truePath;
 	std::string query = "";
 
-	std::cout << "test this word:" << word << std::endl;
 	if (path.find("?") != std::string::npos)
 	{
 		query = path.substr(path.find("?") + 1);
@@ -289,7 +288,7 @@ int 	Request::ProcessTrailer()
 int Request::parseRequest(const std::string& request)
 {
 	_request += request;
-	
+
 	if (!_haveRequest && !processRequest())
 		return (0);
 	if (!_haveHeader && !ProcessHeader())
