@@ -1,6 +1,19 @@
 #include "../../../includes/server/handleCgi.hpp"
 #include "handleCgi.hpp"
 
+static std::string generatePath(Client& currentClient, std::string path)
+{
+    LocationConfig location = currentClient.getRequest().getLocation();
+    if (!location._alias.second.empty())
+    {
+        size_t pos = path.find(location._alias.first);
+        if (pos != std::string::npos)
+            return (location._alias.second + path.substr(pos + location._alias.first.size()));
+        return (location._alias.second + path);
+    }
+    return (location._root + path);
+}
+
 static char **createEnv(Client& currentClient, std::vector<std::string> env)
 {
 	env.push_back("AUTH_TYPE=" + currentClient.getRequest().getHeader("Authorization"));
@@ -9,12 +22,8 @@ static char **createEnv(Client& currentClient, std::vector<std::string> env)
 	env.push_back("GATEWAY_INTERFACE=CGI/1.1");
 	env.push_back("DOCUMENT_ROOT=" + currentClient.getRoot());
 	env.push_back("PATH_INFO=" + currentClient.getRequest().getSecondPath());
-	env.push_back("PATH_TRANSLATED=" + currentClient.getRoot() + currentClient.getRequest().getSecondPath());
+	env.push_back("PATH_TRANSLATED=" + generatePath(currentClient, currentClient.getRequest().getSecondPath()));
 	env.push_back("QUERY_STRING=" + currentClient.getRequest().getQuery());
-	// env.push_back("REMOTE_ADDR=" + currentClient.getRequest().getHeader("Remote-Addr"));
-	// env.push_back("REMOTE_HOST=" + currentClient.getRequest().getHeader("Remote-Host"));
-	// env.push_back("REMOTE_IDENT=" + currentClient.getRequest().getHeader("Remote-Ident"));
-	// env.push_back("REMOTE_USER=" + currentClient.getRequest().getHeader("Remote-User"));
 	env.push_back("REQUEST_METHOD=" + currentClient.getRequest().getMethod());
 	env.push_back("SCRIPT_NAME=" + currentClient.getRequest().getPath());
 	env.push_back("SERVER_NAME=" + currentClient.getConfig()._serverName[0]);
