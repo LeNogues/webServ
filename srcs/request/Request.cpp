@@ -32,6 +32,8 @@ void Request::setLocation(const std::string& path)
 		current = &bestMatch->_locations;
 		search = path;
 	}
+	if (_location._redirect.first != 0)
+		throw HttpStatus(_location._redirect.first);
 }
 
 static std::string findExecutable(const std::string& path)

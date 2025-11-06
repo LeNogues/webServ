@@ -10,6 +10,14 @@ std::map<int, std::string>	initStatusCodes(void)
 	codes[201] = "HTTP/1.1 201 Created";
 	codes[204] = "HTTP/1.1 204 No Content";
 	codes[206] = "HTTP/1.1 206 Partial Content";
+	codes[300] = "HTTP/1.1 300 Multiple Choices";
+	codes[301] = "HTTP/1.1 301 Moved Permanently";
+	codes[302] = "HTTP/1.1 302 Found";
+	codes[303] = "HTTP/1.1 303 See Other";
+	codes[304] = "HTTP/1.1 304 Not Modified";
+	codes[305] = "HTTP/1.1 305 Use Proxy";
+	codes[306] = "HTTP/1.1 306 Switch Proxy";
+	codes[307] = "HTTP/1.1 307 Temporary Redirect";
 	codes[308] = "HTTP/1.1 308 Permanent Redirect";
 	codes[400] = "HTTP/1.1 400 Bad Request";
 	codes[401] = "HTTP/1.1 401 Unauthorized";

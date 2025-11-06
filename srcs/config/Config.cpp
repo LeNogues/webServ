@@ -72,12 +72,29 @@ const std::vector<ServerConfig>& Config::getServers() const { return this->_serv
 static std::vector<std::string> tokenize(const std::string& line)
 {
 	std::vector<std::string> tokens;
-	std::stringstream ss(line);
-	std::string token;
+    bool openQuote = false;
+    size_t size = line.size();
+    std::string buffer = "";
 
-	while (ss >> token)
-		tokens.push_back(token);
-	return tokens;
+    for (size_t i = 0; i < size; i++)
+    {
+        if (line[i] == '\'')
+        {
+            openQuote = !openQuote;
+            continue;
+        }
+        else if (line[i] == ' ' && !openQuote)
+        {
+            if (!buffer.empty())
+                tokens.push_back(buffer);
+            buffer = "";
+        }
+        else
+            buffer += line[i];
+    }
+    if (!buffer.empty())
+        tokens.push_back(buffer);
+    return tokens;
 }
 
 static bool addCommonToken(std::vector<std::string>& tokens, CommonConfig& newConfig);
@@ -194,8 +211,8 @@ static void addCgiParam(std::vector<std::string>& tokens, CommonConfig& newConfi
 
 static void addRedirect(std::vector<std::string>& tokens, CommonConfig& newConfig)
 {
-    if (tokens.size() != 3)
-        throw std::runtime_error("ERROR: 'return' directive needs two arguments (code and URL).");
+    if (tokens.size() != 3 && tokens.size() != 2)
+        throw std::runtime_error("ERROR: 'return' directive needs one or two arguments (code and URL).");
 
     int code;
     std::stringstream ss(tokens[1]);
@@ -203,7 +220,12 @@ static void addRedirect(std::vector<std::string>& tokens, CommonConfig& newConfi
     if (ss.fail() || !ss.eof())
         throw std::runtime_error("ERROR: invalid code for return directive.");
 
-    newConfig._redirect = std::make_pair(code, tokens[2]);
+    if (code >= 300 && code <= 308 && tokens.size() != 3)
+        throw std::runtime_error("ERROR: 'return' directive needs a URL when code is 300 to 308.");
+    if (tokens.size() == 2)
+        newConfig._redirect = std::make_pair(code, "");
+    else
+        newConfig._redirect = std::make_pair(code, tokens[2]);
 }
 
 static bool addCommonToken(std::vector<std::string>& tokens, CommonConfig& newConfig)

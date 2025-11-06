@@ -20,11 +20,9 @@
 
 # include <map>
 # include <vector>
-# include <cerrno>
 # include <sys/types.h>
 # include <sys/socket.h>
 # include <unistd.h>
-# include <errno.h>
 # include <ctime>
 # include <sys/time.h>
 # include <sys/types.h>

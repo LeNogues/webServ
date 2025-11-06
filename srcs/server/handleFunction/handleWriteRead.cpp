@@ -56,17 +56,19 @@ void WebServer::executeRequest(Client& currentClient, int& currentFd)
         {
             bytes_read = recv(currentFd, buffer, sizeof(buffer), 0);
 
-            if (bytes_read > 0)
-                currentClient.getRequest().parseRequest(std::string(buffer, bytes_read));
+            if (bytes_read > 0 && currentClient.getRequest().parseRequest(std::string(buffer, bytes_read)) == 1)
+                break ;
             else if (bytes_read == 0)
             {
                 std::cout << "Client on fd " << currentFd << " closed the connection." << std::endl;
                 handleClientDisconnection(currentFd);
                 return;
             }
-            else
+            if (currentClient.getRequest().getIsValid())
                 break;
         }
+        if (!currentClient.getRequest().getIsValid())
+            throw HttpStatus(400);
         currentClient.setLocation(currentClient.getRequest().getLocation());
         currentClient.getRequest().logRequest();
 
@@ -92,8 +94,20 @@ void WebServer::failedRequest(const HttpStatus& status, Client& currentClient, i
     std::cerr << status.what() << '\n';
     std::string									body = "";
     std::map<std::string, std::string>			headers;
-    std::map<int, std::string>::const_iterator	itPage = currentClient.getErrorPage().find(status.getStatusCode());
-    if (itPage != currentClient.getErrorPage().end())
+    std::map<int, std::string>					errorPage = currentClient.getRequest().getLocation()._errorPage;
+    std::map<int, std::string>::const_iterator	itPage = errorPage.find(status.getStatusCode());
+    std::pair<int, std::string> redirect = currentClient.getRequest().getLocation()._redirect;
+
+    if (redirect.first != 0 && !redirect.second.empty())
+    {
+        if (redirect.first >= 300 && redirect.first <= 308)
+            headers["Location"] = redirect.second;
+        else
+        {
+            body = redirect.second;
+        }
+    }
+    else if (itPage != errorPage.end())
     {
         std::string	customPath = itPage->second;
         std::string	fileContent;

@@ -115,7 +115,7 @@ ssize_t	Client::sendPending()
 		_response.erase(0, static_cast<size_t>(bytesSent));
 		return (bytesSent);
 	}
-	if (bytesSent == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+	if (bytesSent == -1)
 		return (-2);
 	return (-1);
 }
