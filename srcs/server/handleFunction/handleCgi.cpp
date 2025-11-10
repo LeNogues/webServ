@@ -1,5 +1,5 @@
 #include "../../../includes/server/handleCgi.hpp"
-#include "handleCgi.hpp"
+#include "../../../includes/server/WebServer.hpp"
 
 static std::string generatePath(Client& currentClient, std::string path)
 {
@@ -87,9 +87,9 @@ void CreateEnvAndExecute(Client &currentClient, std::vector<std::string> &env, R
     dup2(pipeIn[0], STDIN_FILENO);
     closeAllFd(pipeOut, pipeIn);
 
-    std::cerr << "path : " << path << std::endl;
+    std::cerr << "avant\n";
     execve(path, const_cast<char *const *>(argv), envp);
-
+    std::cerr << "apres \n";
     perror("execve");
         for (size_t i = 0; envp[i] != NULL; ++i)
             delete[] envp[i];
@@ -128,48 +128,70 @@ void CreateHeaderAndGenerate(std::string &cgiResponse, Client &currentClient)
     currentClient.generateResponse(200, headers, responseBody);
 }
 
-void closeAndThrow(int pipeOut[2], int pipeIn[2])
-{
-    closeAllFd(pipeOut, pipeIn);
+void WebServer::addFdToEpoll(int fd, uint32_t events) {
+    epoll_event event;
+    event.data.fd = fd;
+    event.events = events;
+    if (epoll_ctl(_epollFD, EPOLL_CTL_ADD, fd, &event) == -1) {
+        throw std::runtime_error("Erreur: epoll_ctl a échoué pour ajouter un fd");
+    }
+}
+
+void closeAndThrow(int pipe1[2], int pipe2[2]) {
+    close(pipe1[0]);
+    close(pipe1[1]);
+    close(pipe2[0]);
+    close(pipe2[1]);
     throw HttpStatus(500);
 }
 
-void handleCgiRequest(Client& currentClient, std::vector<std::string> env)
+
+void WebServer::handleCgiRequest(Client& currentClient, std::vector<std::string> env)
 {
-	Request request = currentClient.getRequest();
-	std::string cgiResponse;
-	std::string test1 = request.getBody();
-	const char *test = test1.c_str();
+    Request request = currentClient.getRequest();
+    std::string requestBody = request.getBody();
+    const char* bodyCStr = requestBody.c_str();
 
-	int pipeOut[2];
-	int pipeIn[2];
+    int pipeOut[2];
+    int pipeIn[2];
 
-	if (pipe(pipeOut) == -1 || pipe(pipeIn) == -1)
-		throw HttpStatus(500);
+    if (pipe(pipeOut) == -1 || pipe(pipeIn) == -1)
+        throw HttpStatus(500);
 
-	pid_t pid = fork();
+    pid_t pid = fork();
 
-	if (pid == -1)
+    if (pid == -1)
         closeAndThrow(pipeOut, pipeIn);
 
-	if (pid == 0)
-        CreateEnvAndExecute(currentClient, env, request, test, pipeOut, pipeIn);
-	else
-	{
-		close(pipeOut[1]);
-		close(pipeIn[0]);
-
-		std::string body = request.getBody();
-		if (!body.empty())
-			write(pipeIn[1], body.c_str(), body.length());
-		close(pipeIn[1]);
-
-        createResponse(pipeOut, cgiResponse);
-
+    if (pid == 0)
+    {
         close(pipeOut[0]);
-		waitpid(pid, NULL, 0);
+        close(pipeIn[1]);
+        dup2(pipeIn[0], STDIN_FILENO);
+        dup2(pipeOut[1], STDOUT_FILENO);
+        close(pipeIn[0]);
+        close(pipeOut[1]);
 
-        CreateHeaderAndGenerate(cgiResponse, currentClient);
+        CreateEnvAndExecute(currentClient, env, request, bodyCStr, pipeOut, pipeIn);
+        exit(EXIT_FAILURE);
     }
-    return ;
+    else
+    {
+        close(pipeOut[1]);
+        close(pipeIn[0]);
+
+        fcntl(pipeOut[0], F_SETFL, O_NONBLOCK);
+        fcntl(pipeIn[1], F_SETFL, O_NONBLOCK);
+
+        _pipeToClient[pipeOut[0]] = currentClient._clientFd;
+        _pipeToClient[pipeIn[1]] = currentClient._clientFd;
+
+        addFdToEpoll(pipeOut[0], EPOLLIN);
+
+        if (!requestBody.empty()) {
+            addFdToEpoll(pipeIn[1], EPOLLOUT);
+        } else {
+            close(pipeIn[1]);
+        }
+    }
 }

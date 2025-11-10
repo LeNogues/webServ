@@ -39,17 +39,19 @@ void WebServer::setServerAdress(const int& serverFd, sockaddr_in& serverAdress, 
 }
 
 
+
 void WebServer::run()
 {
     epoll_event events[MAX_EVENTS];
 
-    while(1)
+    while (true)
     {
-        int numEvent = epoll_wait(_epollFD, events, MAX_EVENTS, 5);
+        int numEvent = epoll_wait(_epollFD, events, MAX_EVENTS, 100);
+
         if (numEvent == -1)
         {
             if (errno == EINTR)
-                continue ;
+                continue;
             else
                 throw std::runtime_error("ERROR: erreur critique de epoll_wait");
         }
@@ -57,22 +59,28 @@ void WebServer::run()
         for (int i = 0; i < numEvent; ++i)
         {
             int currentFd = events[i].data.fd;
-            if ( events[i].events & (EPOLLERR | EPOLLHUP))
+
+            if (events[i].events & (EPOLLERR | EPOLLHUP))
             {
                 handleClientDisconnection(currentFd);
-                continue ;
+                continue;
             }
-            //la ligne fait peur mais elle cree juste un iterateur, panique pas bebou
-            std::map<int, const ServerConfig, std::less<int>, std::allocator<std::pair<const int, const ServerConfig> > >::iterator currentServer = _listeningSockets.find(currentFd);
-            if (currentServer == _listeningSockets.end())
+
+            if (_listeningSockets.count(currentFd))
+                handleNewConnection(currentFd, _listeningSockets[currentFd]);
+            else if (_pipeToClient.count(currentFd))
+            {
+                int clientFd = _pipeToClient[currentFd];
+                (void)clientFd
+                    
+            }
+            else
             {
                 if (events[i].events & EPOLLIN)
                     handleClientRead(currentFd);
                 else if (events[i].events & EPOLLOUT)
                     handleClientWrite(currentFd);
             }
-            else
-                handleNewConnection(currentFd, currentServer->second);
         }
     }
 }

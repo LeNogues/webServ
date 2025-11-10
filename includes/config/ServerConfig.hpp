@@ -29,7 +29,7 @@ struct CommonConfig {
     unsigned long                           _maxSizeBody;
     bool                                    _autoIndex;
 
-    CommonConfig() : _alias(std::make_pair("", "")), _maxSizeBody(1000000), _autoIndex(false) {}
+    CommonConfig() : _alias(std::make_pair("", "")), _maxSizeBody(4565158), _autoIndex(false) {}
 };
 
 struct LocationConfig : public CommonConfig

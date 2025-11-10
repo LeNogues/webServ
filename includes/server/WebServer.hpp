@@ -15,6 +15,8 @@
 
 # ifndef MAX_EVENTS
 #  define MAX_EVENTS 10
+#  define CLIENT_TIMEOUT_SECONDS 500
+#  define CGI_BUFFER_SIZE 100
 # endif
 
 # include <map>
@@ -38,6 +40,15 @@
 # include "../httpGen/generateAutoIndex.hpp"
 # include "../server/handleCgi.hpp"
 
+struct CgiHandler
+{
+    pid_t pid;
+    int   pipeReadFd;
+    int   pipeWriteFd;
+    size_t bytesWritten;
+
+    CgiHandler() : pid(0), pipeReadFd(-1), pipeWriteFd(-1), bytesWritten(0) {}
+};
 
 class WebServer
 {
@@ -48,6 +59,7 @@ class WebServer
         int                                 _epollFD;
 		std::string							_selfPath;
 		std::vector<std::string>			_envp;
+        
 
         void	 handleNewConnection(int currentFd, const ServerConfig& config);
         void	 setServerAdress(const int& serverFd, sockaddr_in& serverAdress, size_t i);
@@ -58,12 +70,17 @@ class WebServer
         void	 switchToRead(int clientFd);
         void     executeRequest(Client& currentClient, int& currentFd);
         void     failedRequest(const HttpStatus& status, Client& currentClient, int& currentFd);
-
+        void     checkClientTimeouts();
+        void     handleCgiRequest(Client &currentClient, std::vector<std::string> env);
+        void     handlePostRequest(Client& currentClient, const std::vector<std::string>& envp);
+        void     addFdToEpoll(int fd, uint32_t events);
 
     public:
         void    init();
         void    run();
-
+        std::map<int, int>  _cgiFd;
+        std::map<int, int> _pipeToClient;
+        std::map<int, CgiHandler> _clientToCgi;
         class signalException : public std::exception
         {
             public:
@@ -72,10 +89,11 @@ class WebServer
 
         WebServer(const std::vector<ServerConfig>& configs, char **envp);
         ~WebServer();
+
 };
 
 void handleDeleteRequest(Client& currentClient, const std::string& filePath);
-void handlePostRequest(Client& currentClient, const std::vector<std::string>& envp);
+
 void handleGetRequest(Client &);
 
 #endif

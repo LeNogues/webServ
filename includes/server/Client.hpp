@@ -35,14 +35,14 @@ class Client
         std::string             _response;
         Request                 _request;
         bool                    _ShouldClose;
-        int                     _clientFd;
-
+        std::string             _cgiResponseBuffer;
         void buildResponse(std::string& response, const std::map<std::string, std::string>& headers, const std::string& body);
 
     public:
         Client(int clientFd, const ServerConfig& config);
         ~Client();
         Request& getRequest();
+        int                               _clientFd;
         const std::string&                getRoot();
         const std::string&                getDefaultFile();
         const ServerConfig&               getConfig();
@@ -56,6 +56,8 @@ class Client
         bool                              hasResponse() const;
         ssize_t                           sendPending();
         std::string                       genAbsPath(const std::string& path);
+        void appendToCgiBuffer(const char* data, size_t len);
+        void parseCgiResponse();
 };
 
 #endif

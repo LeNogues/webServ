@@ -13,8 +13,6 @@
 # include <algorithm>
 # include "../utils/trim.hpp"
 
-void handleCgiRequest(Client &currentClient, std::vector<std::string> env);
-
 void interpretResponse(int pipeOut[2], int pipeIn[2], Request &request, std::string &cgiResponse, pid_t pid, Client &currentClient);
 
 void closeAndThrow(int pipeOut[2], int pipeIn[2]);
