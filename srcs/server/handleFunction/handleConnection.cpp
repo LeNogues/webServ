@@ -51,17 +51,46 @@ void WebServer::handleNewConnection(int currentFd, const ServerConfig& config)
     }
 }
 
-void WebServer::handleClientDisconnection(int currentFd)
+void WebServer::handleClientDisconnection(int clientFd)
 {
-    if (epoll_ctl(_epollFD, EPOLL_CTL_DEL, currentFd, NULL) == -1)
-        std::cerr << "Warning: epoll-ctl(DEL) failed for fd : " << currentFd << std::endl;
-    close(currentFd);
-    size_t erased_count = _clients.erase(currentFd);
-    if (erased_count > 0)
-    {
-        std::cout << "Client on fd " << currentFd << " disconnected and cleaned up." << std::endl;
-        std::cout << "------------------------------------------------------------------------------------------------------------------------------\n" << std::endl;
+    // Étape 1: Vérifier si le client existe encore. Si non, on a déjà tout nettoyé.
+    if (_clients.find(clientFd) == _clients.end()) {
+        // Affiche un warning si vous voulez, mais ne faites rien de plus.
+        // std::cerr << "Warning: tentative de déconnexion d'un client déjà nettoyé: " << clientFd << std::endl;
+        return;
     }
-    else
-        std::cerr << "Warning: tried to erase non-existant client for fd :" << currentFd << std::endl;
+
+    // Étape 2: Nettoyer le CGI associé s'il y en a un
+    if (_clientToCgi.count(clientFd))
+    {
+        CgiHandler& cgi = _clientToCgi[clientFd];
+
+        // Tuer le processus CGI pour être sûr qu'il ne devienne pas un zombie
+        if (cgi.pid > 0) {
+            kill(cgi.pid, SIGKILL);
+            waitpid(cgi.pid, NULL, 0); // Nettoyer le processus zombie
+        }
+
+        // Nettoyer le pipe de lecture
+        if (cgi.pipeReadFd != -1) {
+            epoll_ctl(_epollFD, EPOLL_CTL_DEL, cgi.pipeReadFd, NULL); // Ignorer l'erreur si déjà retiré
+            close(cgi.pipeReadFd);
+            _pipeToClient.erase(cgi.pipeReadFd);
+        }
+
+        // Nettoyer le pipe d'écriture
+        if (cgi.pipeWriteFd != -1) {
+            epoll_ctl(_epollFD, EPOLL_CTL_DEL, cgi.pipeWriteFd, NULL); // Ignorer l'erreur si déjà retiré
+            close(cgi.pipeWriteFd);
+            _pipeToClient.erase(cgi.pipeWriteFd);
+        }
+
+        _clientToCgi.erase(clientFd);
+    }
+    
+    // Étape 3: Nettoyer le client lui-même
+    std::cout << "Client " << clientFd << " déconnecté." << std::endl;
+    epoll_ctl(_epollFD, EPOLL_CTL_DEL, clientFd, NULL); // Ignorer l'erreur
+    close(clientFd); // <-- L'APPEL LE PLUS IMPORTANT !
+    _clients.erase(clientFd);
 }

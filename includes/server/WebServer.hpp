@@ -74,6 +74,7 @@ class WebServer
         void     handleCgiRequest(Client &currentClient, std::vector<std::string> env);
         void     handlePostRequest(Client& currentClient, const std::vector<std::string>& envp);
         void     addFdToEpoll(int fd, uint32_t events);
+        void     handleCgiWrite(int pipeFd);
 
     public:
         void    init();

@@ -39,7 +39,6 @@ void WebServer::setServerAdress(const int& serverFd, sockaddr_in& serverAdress, 
 }
 
 
-
 void WebServer::run()
 {
     epoll_event events[MAX_EVENTS];
@@ -71,8 +70,9 @@ void WebServer::run()
             else if (_pipeToClient.count(currentFd))
             {
                 int clientFd = _pipeToClient[currentFd];
-                (void)clientFd
-                    
+                (void)clientFd;
+                // if (events[i].events & EPOLLOUT)
+                //     handleCgiWrite(currentFd);
             }
             else
             {

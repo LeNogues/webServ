@@ -75,25 +75,35 @@ void createHeaders(std::string line, std::map<std::string, std::string>& headers
     }
 }
 
-void CreateEnvAndExecute(Client &currentClient, std::vector<std::string> &env, Request &request, const char *test, int pipeOut[2], int pipeIn[2])
+void CreateEnvAndExecute(Client &currentClient, std::vector<std::string> &env, Request &request, const char *php_interpreter_path, int pipeOut[2], int pipeIn[2])
 {
-    (void)request;
+    (void)currentClient;
+    (void)env;
+
+    const char *path_to_php = php_interpreter_path;
+
+    std::string script_path_str = request.getPath();
+    const char *path_to_script = script_path_str.c_str();
+
+    const char *argv[] = {path_to_php, path_to_script, NULL};
+
     char **envp = createEnv(currentClient, env);
-    std::string path_str = request.getPath();
-    const char *path = path_str.c_str();
-    const char *argv[] = {test, NULL};
 
     dup2(pipeOut[1], STDOUT_FILENO);
     dup2(pipeIn[0], STDIN_FILENO);
     closeAllFd(pipeOut, pipeIn);
 
-    std::cerr << "avant\n";
-    execve(path, const_cast<char *const *>(argv), envp);
-    std::cerr << "apres \n";
-    perror("execve");
-        for (size_t i = 0; envp[i] != NULL; ++i)
-            delete[] envp[i];
+    std::cerr << "Avant execve. Commande: " << path_to_php << " " << path_to_script << std::endl;
+
+    execve(path_to_php, const_cast<char *const *>(argv), envp);
+
+    std::cerr << "APRES EXECVE - CELA SIGNIFIE UNE ERREUR !" << std::endl;
+    perror("Erreur de execve");
+
+    for (size_t i = 0; envp[i] != NULL; ++i)
+        delete[] envp[i];
     delete[] envp;
+
     throw std::exception();
 }
 
@@ -172,7 +182,8 @@ void WebServer::handleCgiRequest(Client& currentClient, std::vector<std::string>
         close(pipeIn[0]);
         close(pipeOut[1]);
 
-        CreateEnvAndExecute(currentClient, env, request, bodyCStr, pipeOut, pipeIn);
+        (void)bodyCStr;
+        CreateEnvAndExecute(currentClient, env, request, "/usr/bin/php-cgi", pipeOut, pipeIn);
         exit(EXIT_FAILURE);
     }
     else
