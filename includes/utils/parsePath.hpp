@@ -3,9 +3,8 @@
 
 # include <string>
 # include <map>
-# include <algorithm>
 
-bool backPath(std::string& path);
+bool		backPath(std::string& path);
 std::string	guessContentType(const std::string& path);
 
 #endif

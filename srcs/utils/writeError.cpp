@@ -12,8 +12,8 @@
 
 #include "../../includes/utils/writeError.hpp"
 
-int writeError(std::string str, int returnValue){
+int	writeError(const std::string& str, int returnValue)
 {
-    std::cerr << str << std::endl;
-    return (returnValue);
-}}
+	std::cerr << str << std::endl;
+	return (returnValue);
+}

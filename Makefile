@@ -11,7 +11,6 @@ SRC     := 	srcs/main.cpp \
 			srcs/httpGen/generateAutoIndex.cpp \
 			srcs/request/Request.cpp \
 			srcs/server/Client.cpp \
-			srcs/server/Server.cpp \
 			srcs/server/WebServer.cpp \
 			srcs/server/handleFunction/handleCgi.cpp \
 			srcs/server/handleFunction/handleConnection.cpp \

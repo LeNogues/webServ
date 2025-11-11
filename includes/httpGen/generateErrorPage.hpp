@@ -3,6 +3,6 @@
 
 #include <string>
 
-std::string generateErrorPage(const std::string& errorMessage);
+std::string	generateErrorPage(const std::string& errorMessage);
 
 #endif

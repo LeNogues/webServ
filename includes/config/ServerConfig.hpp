@@ -16,32 +16,32 @@
 # include <map>
 # include <vector>
 # include <utility>
-# include <iostream>
+# include <string>
 
 struct CommonConfig {
-    std::pair<int, std::string>             _redirect;
-    std::map<int, std::string>              _errorPage;
-    std::map<std::string, std::string>      _cgiParams;
-    std::vector<std::string>                _allowedMethods;
-    std::pair<std::string, std::string>     _alias;
-    std::string                             _root;
-    std::string                             _defaultFile;
-    unsigned long                           _maxSizeBody;
-    bool                                    _autoIndex;
+	std::vector<std::string>			_allowedMethods;
+	std::pair<int, std::string>			_redirect;
+	std::pair<std::string, std::string>	_alias;
+	std::map<int, std::string>			_errorPage;
+	std::map<std::string, std::string>	_cgiParams;
+	std::string							_root;
+	std::string							_defaultFile;
+	unsigned long						_maxSizeBody;
+	bool								_autoIndex;
 
-    CommonConfig() : _alias(std::make_pair("", "")), _maxSizeBody(4565158), _autoIndex(false) {}
+	CommonConfig() : _alias(std::make_pair("", "")), _maxSizeBody(4565158), _autoIndex(false) {}
 };
 
 struct LocationConfig : public CommonConfig
 {
-    std::map<std::string, LocationConfig>   _locations;
+	std::map<std::string, LocationConfig>	_locations;
 };
 
 struct ServerConfig : public CommonConfig
 {
-    std::map<std::string, LocationConfig>       _location;
-    std::pair<std::string, int>                 _listenOn;
-    std::vector<std::string>                    _serverName;
+	std::map<std::string, LocationConfig>	   _location;
+	std::pair<std::string, int>				 _listenOn;
+	std::vector<std::string>					_serverName;
 };
 
 #endif

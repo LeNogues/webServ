@@ -10,5 +10,12 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#ifndef SETNONBLOCKING_HPP
+# define SETNONBLOCKING_HPP
 
-void setNonBlocking(int serverFD);
+# include <fcntl.h>
+# include <unistd.h>
+
+void	setNonBlocking(int serverFD);
+
+#endif

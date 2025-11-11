@@ -15,6 +15,6 @@
 
 # include <iostream>
 
-int writeError(std::string str, int returnValue);
+int	writeError(std::string str, int returnValue);
 
 #endif

@@ -110,8 +110,7 @@ ssize_t	Client::sendPending()
 	if (_response.empty())
 		return (0);
 	bytesSent = send(_clientFd, _response.data(), _response.size(), 0);
-	if (bytesSent > 0)
-	{
+	if (bytesSent > 0) {
 		_response.erase(0, static_cast<size_t>(bytesSent));
 		return (bytesSent);
 	}

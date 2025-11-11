@@ -13,10 +13,10 @@
 #include "../../includes/server/WebServer.hpp"
 
 WebServer::WebServer(const std::vector<ServerConfig>& configs, char **envp)
-    : _servers(configs)
+	: _servers(configs)
 {
-    for (size_t i = 0; envp[i]; ++i)
-        _envp.push_back(envp[i]);
+	for (size_t i = 0; envp[i]; ++i)
+		_envp.push_back(envp[i]);
 }
 
 WebServer::~WebServer()
@@ -25,104 +25,93 @@ WebServer::~WebServer()
 
 static void errorInit(const std::string& Error, const std::string& value, const int& serverFd)
 {
-    close(serverFd);
-    throw std::runtime_error(Error + value);
+	close(serverFd);
+	throw std::runtime_error(Error + value);
 }
 
 void WebServer::setServerAdress(const int& serverFd, sockaddr_in& serverAdress, size_t i)
 {
-    serverAdress.sin_family = AF_INET;
-    serverAdress.sin_port = htons(_servers[i]._listenOn.second);
-    serverAdress.sin_addr.s_addr = inet_addr(_servers[i]._listenOn.first.c_str());
-    if (serverAdress.sin_addr.s_addr == INADDR_NONE)
-        errorInit("ERROR: Adresse IP invalide: ", _servers[i]._listenOn.first, serverFd);
+	serverAdress.sin_family = AF_INET;
+	serverAdress.sin_port = htons(_servers[i]._listenOn.second);
+	serverAdress.sin_addr.s_addr = inet_addr(_servers[i]._listenOn.first.c_str());
+	if (serverAdress.sin_addr.s_addr == INADDR_NONE)
+		errorInit("ERROR: Adresse IP invalide: ", _servers[i]._listenOn.first, serverFd);
 }
 
 
 void WebServer::run()
 {
-    epoll_event events[MAX_EVENTS];
+	epoll_event events[MAX_EVENTS];
 
-    while (true)
-    {
-        int numEvent = epoll_wait(_epollFD, events, MAX_EVENTS, 100);
+	while (true) {
+		int numEvent = epoll_wait(_epollFD, events, MAX_EVENTS, 100);
+		if (numEvent == -1) {
+			if (errno == EINTR)
+				continue;
+			else
+				throw std::runtime_error("ERROR: erreur critique de epoll_wait");
+		}
+		for (int i = 0; i < numEvent; ++i) {
+			int currentFd = events[i].data.fd;
 
-        if (numEvent == -1)
-        {
-            if (errno == EINTR)
-                continue;
-            else
-                throw std::runtime_error("ERROR: erreur critique de epoll_wait");
-        }
-
-        for (int i = 0; i < numEvent; ++i)
-        {
-            int currentFd = events[i].data.fd;
-
-            if (events[i].events & (EPOLLERR | EPOLLHUP))
-            {
-                handleClientDisconnection(currentFd);
-                continue;
-            }
-
-            if (_listeningSockets.count(currentFd))
-                handleNewConnection(currentFd, _listeningSockets[currentFd]);
-            else if (_pipeToClient.count(currentFd))
-            {
-                int clientFd = _pipeToClient[currentFd];
-                (void)clientFd;
-                // if (events[i].events & EPOLLOUT)
-                //     handleCgiWrite(currentFd);
-            }
-            else
-            {
-                if (events[i].events & EPOLLIN)
-                    handleClientRead(currentFd);
-                else if (events[i].events & EPOLLOUT)
-                    handleClientWrite(currentFd);
-            }
-        }
-    }
+			if (events[i].events & (EPOLLERR | EPOLLHUP)) {
+				handleClientDisconnection(currentFd);
+				continue;
+			}
+			if (_listeningSockets.count(currentFd)) {
+				handleNewConnection(currentFd, _listeningSockets[currentFd]);
+			} else if (_pipeToClient.count(currentFd)) {
+				int clientFd = _pipeToClient[currentFd];
+				(void)clientFd;
+				// if (events[i].events & EPOLLOUT)
+				//	 handleCgiWrite(currentFd);
+			} else {
+				if (events[i].events & EPOLLIN)
+					handleClientRead(currentFd);
+				else if (events[i].events & EPOLLOUT)
+					handleClientWrite(currentFd);
+			}
+		}
+	}
 }
 
 void WebServer::init()
 {
-    _epollFD = epoll_create(MAX_EVENTS);
-    if (_epollFD == -1)
-        throw std::runtime_error("ERROR:can't create epoll instance");
+	_epollFD = epoll_create(MAX_EVENTS);
+	if (_epollFD == -1)
+		throw std::runtime_error("ERROR:can't create epoll instance");
 
-    for (size_t i = 0; i < _servers.size(); ++i)
-    {
-        int serverFd = socket(AF_INET, SOCK_STREAM, 0);
-        if (serverFd == -1)
-            throw std::runtime_error("ERROR: could not create socket for " + _servers[i]._serverName[0]);
+	for (size_t i = 0; i < _servers.size(); ++i) {
+		int serverFd = socket(AF_INET, SOCK_STREAM, 0);
+		if (serverFd == -1)
+			throw std::runtime_error("ERROR: could not create socket for " + _servers[i]._serverName[0]);
 
-        int opt = 1;
-        if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-            errorInit("ERROR: setsockopt failed for", _servers[i]._serverName[0], serverFd);
+		int opt = 1;
+		if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+			errorInit("ERROR: setsockopt failed for", _servers[i]._serverName[0], serverFd);
 
-        struct sockaddr_in serverAdress;
-        setServerAdress(serverFd, serverAdress, i);
+		struct sockaddr_in serverAdress;
+		setServerAdress(serverFd, serverAdress, i);
 
-        if (bind(serverFd, (struct sockaddr*)&serverAdress, sizeof(serverAdress)) < 0)
-            errorInit("ERROR: failed to bind to port ", intToString(_servers[i]._listenOn.second), serverFd);
+		if (bind(serverFd, (struct sockaddr*)&serverAdress, sizeof(serverAdress)) < 0)
+			errorInit("ERROR: failed to bind to port ", intToString(_servers[i]._listenOn.second), serverFd);
 
-        setNonBlocking(serverFd);
+		setNonBlocking(serverFd);
 
-        if (listen(serverFd, SOMAXCONN) < 0)
-            errorInit("ERROR: listen failed for ", _servers[i]._serverName[0], serverFd);
+		if (listen(serverFd, SOMAXCONN) < 0)
+			errorInit("ERROR: listen failed for ", _servers[i]._serverName[0], serverFd);
 
-        struct epoll_event event = {};
-        event.events = EPOLLIN;
-        event.data.fd = serverFd;
-        if (epoll_ctl(_epollFD, EPOLL_CTL_ADD, serverFd, &event) == -1) {
-            throw std::runtime_error("ERROR: epoll_ctl failed to add listening socket");
-        }
-        _listeningSockets.insert(std::make_pair(serverFd, _servers[i]));
-    }
+		struct epoll_event event = {};
+		event.events = EPOLLIN;
+		event.data.fd = serverFd;
+		if (epoll_ctl(_epollFD, EPOLL_CTL_ADD, serverFd, &event) == -1) {
+			throw std::runtime_error("ERROR: epoll_ctl failed to add listening socket");
+		}
+		_listeningSockets.insert(std::make_pair(serverFd, _servers[i]));
+	}
 }
 
 const char* WebServer::signalException::what() const throw()
 {
-    return ("\nServer interrupted by signal");
+	return ("\nServer interrupted by signal");
 }

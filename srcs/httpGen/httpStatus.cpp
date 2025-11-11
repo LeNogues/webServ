@@ -1,7 +1,5 @@
 #include "../../includes/httpGen/httpStatus.hpp"
 
-std::map<int, std::string>	STATUS_CODES = initStatusCodes();
-
 std::map<int, std::string>	initStatusCodes(void)
 {
 	std::map<int, std::string>	codes;
@@ -38,6 +36,7 @@ std::map<int, std::string>	initStatusCodes(void)
 
 std::string	getStatusMessage(int statusCode)
 {
+	static std::map<int, std::string>			STATUS_CODES = initStatusCodes();
 	std::map<int, std::string>::const_iterator	it;
 
 	it = STATUS_CODES.find(statusCode);
