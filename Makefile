@@ -14,7 +14,9 @@ SRC     := 	srcs/main.cpp \
 			srcs/server/WebServer.cpp \
 			srcs/server/handleFunction/handleCgi.cpp \
 			srcs/server/handleFunction/handleConnection.cpp \
-			srcs/server/handleFunction/handleRequest.cpp \
+			srcs/server/handleFunction/handlePostRequest.cpp \
+			srcs/server/handleFunction/handleGetRequest.cpp \
+			srcs/server/handleFunction/handleDeleteRequest.cpp \
 			srcs/server/handleFunction/handleWriteRead.cpp \
 			srcs/server/handleFunction/switchState.cpp \
 			srcs/utils/converters.cpp \

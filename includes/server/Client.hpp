@@ -15,6 +15,7 @@
 # define CLIENT_HPP
 
 # include "../config/ServerConfig.hpp"
+# include "../utils/writeError.hpp"
 # include "../request/Request.hpp"
 
 # include <sys/socket.h>
@@ -32,7 +33,6 @@ class Client
 		LocationConfig		  _location;
 		std::string			 _response;
 		Request				 _request;
-		bool					_ShouldClose;
 		std::string			 _cgiResponseBuffer;
 		void buildResponse(std::string& response, const std::map<std::string, std::string>& headers, const std::string& body);
 
@@ -48,7 +48,6 @@ class Client
 		Request&							getRequest();
 		bool								getShouldClose() const;
 		bool								getAutoIndex();
-		void								setShouldClose(bool state);
 		void								setLocation(const LocationConfig& location);
 		void								generateResponse(const std::string& status, const std::map<std::string, std::string>& headers, const std::string& body);
 		void								generateResponse(const int status, const std::map<std::string, std::string>& headers, const std::string& body);

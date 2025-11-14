@@ -57,7 +57,7 @@ class Request
 
 	public:
 		int parseRequest(const std::string& request);
-		void logRequest();
+		void logRequest(int fd);
 		void clear();
 
 		// Getters/Setters

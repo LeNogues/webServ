@@ -146,7 +146,7 @@ void closeAndThrow(int pipe1[2], int pipe2[2]) {
 	throw HttpStatus(500);
 }
 
-void WebServer::handleCgiRequest(Client& currentClient, std::vector<std::string> env)
+void WebServer::handleCgiRequest(Client& currentClient)
 {
 	Request request = currentClient.getRequest();
 	std::string requestBody = request.getBody();
@@ -168,7 +168,7 @@ void WebServer::handleCgiRequest(Client& currentClient, std::vector<std::string>
 		close(pipeOut[1]);
 
 		(void)bodyCStr;
-		CreateEnvAndExecute(currentClient, env, request, "/usr/bin/php-cgi", pipeOut, pipeIn);
+		CreateEnvAndExecute(currentClient, _envp, request, "/usr/bin/php-cgi", pipeOut, pipeIn);
 		exit(EXIT_FAILURE);
 	} else {
 		close(pipeOut[1]);

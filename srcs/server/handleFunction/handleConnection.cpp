@@ -14,9 +14,7 @@
 
 void WebServer::handleNewConnection(int currentFd, const ServerConfig& config)
 {
-
-	std::cout << "\n------------------------------------------------------------------------------------------------------------------------------" << std::endl;
-	std::cout << "during NewConnection " << config._serverName[0] << std::endl;
+	std::cout << "New connection on " << config._serverName[0] << " server" << std::endl;
 	while (true) {
 		struct sockaddr_in clientAddress;
 		socklen_t clientAddrLen = sizeof(clientAddress);
@@ -26,7 +24,7 @@ void WebServer::handleNewConnection(int currentFd, const ServerConfig& config)
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				break;
 			} else {
-				std::cerr << "Erreur lors de accept()" << std::endl;
+				std::cerr << "Error: accept() failed" << std::endl;
 				break;
 			}
 		}
@@ -35,12 +33,12 @@ void WebServer::handleNewConnection(int currentFd, const ServerConfig& config)
 		event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
 		event.data.fd = clientFd;
 		if (epoll_ctl(_epollFD, EPOLL_CTL_ADD, clientFd, &event) == -1) {
-			std::cerr << "Erreur: epoll_ctl ne peut pas ajouter le client fd" << std::endl;
+			std::cerr << "Error: epoll_ctl failed to add client fd" << std::endl;
 			close(clientFd);
 			continue;
 		}
 		_clients.insert(std::make_pair(clientFd, Client(clientFd, config)));
-		std::cout << "Nouvelle connexion acceptée sur le fd: " << clientFd << std::endl;
+		std::cout << "New connection accepted on fd: " << clientFd << std::endl;
 	}
 }
 
@@ -69,7 +67,7 @@ void WebServer::handleClientDisconnection(int clientFd)
 		}
 		_clientToCgi.erase(clientFd);
 	}
-	std::cout << "Client " << clientFd << " déconnecté." << std::endl;
+	std::cout << "\033[31m" << "Client " << clientFd << " disconnected." << "\033[0m" << std::endl;
 	epoll_ctl(_epollFD, EPOLL_CTL_DEL, clientFd, NULL);
 	close(clientFd);
 	_clients.erase(clientFd);

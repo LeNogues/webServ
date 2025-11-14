@@ -44,7 +44,7 @@ void WebServer::run()
 	epoll_event events[MAX_EVENTS];
 
 	while (true) {
-		int numEvent = epoll_wait(_epollFD, events, MAX_EVENTS, 100);
+		int numEvent = epoll_wait(_epollFD, events, MAX_EVENTS, 10000);
 		if (numEvent == -1) {
 			if (errno == EINTR)
 				continue;

@@ -11,13 +11,7 @@
 /* ************************************************************************** */
 
 #include "../includes/config/Config.hpp"
-#include "../includes/utils/writeError.hpp"
 #include "../includes/server/WebServer.hpp"
-
-#include <iostream>
-#include <vector>
-#include <exception>
-#include <csignal>
 
 void	signalFunction(int sig)
 {

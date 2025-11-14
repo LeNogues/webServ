@@ -3,22 +3,24 @@
 void Request::setLocation(const std::string& path)
 {
 	const std::map<std::string, LocationConfig>* current = &_config._location;
+	std::map<std::string, LocationConfig>::const_iterator it;
 	static_cast<CommonConfig&>(_location) = _config;
-	std::string search = path;
+	const LocationConfig*	bestMatch;
+	std::string				candidate;
+	bool					valideBack;
 
 	while (true)
 	{
-		const LocationConfig* bestMatch = NULL;
-		std::string candidate = search;
-
-		while (true) {
-			std::map<std::string, LocationConfig>::const_iterator it = current->find(candidate);
+		candidate = path;
+		valideBack = true;
+		bestMatch = NULL;
+		while (valideBack) {
+			it = current->find(candidate);
 			if (it != current->end()) {
 				bestMatch = &it->second;
 				break;
 			}
-			if (!backPath(candidate))
-				break;
+			valideBack = backPath(candidate);
 		}
 		if (bestMatch == NULL)
 			break;
@@ -26,7 +28,6 @@ void Request::setLocation(const std::string& path)
 		if (bestMatch->_locations.empty())
 			break;
 		current = &bestMatch->_locations;
-		search = path;
 	}
 	if (_location._redirect.first != 0)
 		throw HttpStatus(_location._redirect.first);
@@ -283,8 +284,9 @@ int Request::parseRequest(const std::string& request)
 	return (1);
 }
 
-void Request::logRequest()
+void Request::logRequest(int fd)
 {
+	std::cout << std::endl << "\033[34m" << "Request on fd " << fd << " -----------------------------------------------" << "\033[0m" << std::endl;
 	std::cout << _method << " " << _uri;
 	if (!_query.empty())
 		std::cout << "?" << _query;
@@ -292,6 +294,7 @@ void Request::logRequest()
 	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++)
 		std::cout << it->first << ": " << it->second << std::endl;
 	std::cout << std::endl << _body << std::endl;
+	std::cout << std::endl << "\033[32m" << "Response on fd " << fd << " ----------------------------------------------" << "\033[0m" << std::endl;
 }
 
 void Request::clear()
@@ -345,15 +348,8 @@ std::string							Request::getHeader(const std::string& headerName) const
 	return "";
 }
 
-void	Request::setSecondPath(std::string newPath)
-{
-	_secondPath = newPath;
-}
-
-void	Request::setPath(std::string newPath)
-{
-	_path = newPath;
-}
+void	Request::setPath(std::string newPath)		{ _path = newPath; }
+void	Request::setSecondPath(std::string newPath)	{ _secondPath = newPath; }
 
 
 // Constructor
@@ -377,8 +373,7 @@ Request::Request(const ServerConfig& config) : _config(config)
 	_isValid = false;
 }
 
-Request::Request(const Request& other)
-	: _config(other._config)
+Request::Request(const Request& other) : _config(other._config)
 {
 	*this = other;
 }

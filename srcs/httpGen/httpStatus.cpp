@@ -23,6 +23,7 @@ std::map<int, std::string>	initStatusCodes(void)
 	codes[404] = "HTTP/1.1 404 Not Found";
 	codes[405] = "HTTP/1.1 405 Method Not Allowed";
 	codes[408] = "HTTP/1.1 408 Request Timeout";
+	codes[409] = "HTTP/1.1 409 Conflict";
 	codes[411] = "HTTP/1.1 411 Length Required";
 	codes[413] = "HTTP/1.1 413 Payload Too Large";
 	codes[414] = "HTTP/1.1 414 URI Too Long";

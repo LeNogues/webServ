@@ -15,7 +15,6 @@
 Client::Client(int clientFd, const ServerConfig& config)
 	: _config(config), _response(""), _request(_config), _clientFd(clientFd)
 {
-	_ShouldClose = 1;
 }
 
 Client::~Client()
@@ -64,12 +63,10 @@ bool	Client::getAutoIndex() {
 
 bool Client::getShouldClose() const
 {
-	return (this->_ShouldClose);
-}
-
-void Client::setShouldClose(bool state)
-{
-	_ShouldClose = state;
+	bool shouldClose = 0;
+	if (this->_request.getHeader("Connection") == "close")
+		shouldClose = 1;
+	return (shouldClose);
 }
 
 void Client::setLocation(const LocationConfig& location)
@@ -105,16 +102,20 @@ bool	Client::hasResponse() const
 
 ssize_t	Client::sendPending()
 {
+	size_t	totalSent = 0;
 	ssize_t	bytesSent;
 
 	if (_response.empty())
 		return (0);
-	bytesSent = send(_clientFd, _response.data(), _response.size(), 0);
-	if (bytesSent > 0) {
-		_response.erase(0, static_cast<size_t>(bytesSent));
-		return (bytesSent);
+	while (totalSent < _response.size()) {
+		bytesSent = send(_clientFd, _response.data() + totalSent, _response.size() - totalSent, 0);
+		if (bytesSent < 0)
+			return (-1);
+		totalSent += bytesSent;
 	}
-	if (bytesSent == -1)
-		return (-2);
-	return (-1);
+	// std::cout << "Response on fd " << _clientFd << " -----------------------------------------------\n" << std::endl;
+	// std::cout << _response << std::endl;
+	// std::cout << "----------------------------------------------------------------\n" << std::endl;
+	_response.erase(0, static_cast<size_t>(bytesSent));
+	return (totalSent);
 }

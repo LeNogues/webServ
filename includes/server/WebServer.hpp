@@ -33,6 +33,7 @@
 # include <vector>
 # include <cerrno>
 # include <cstdio>
+# include <cstring>
 # include <sstream>
 # include <fstream>
 # include <fcntl.h>
@@ -70,11 +71,11 @@ class WebServer
 		void	handleClientRead(int currentFd);
 		void	switchToWrite(int clientFd);
 		void	switchToRead(int clientFd);
-		void	executeRequest(Client& currentClient, int& currentFd);
-		void	failedRequest(const HttpStatus& status, Client& currentClient, int& currentFd);
+		void	executeRequest(Client& currentClient);
+		void	failedRequest(const HttpStatus& status, Client& currentClient);
 		void	checkClientTimeouts();
-		void	handleCgiRequest(Client &currentClient, std::vector<std::string> env);
-		void	handlePostRequest(Client& currentClient, const std::vector<std::string>& envp);
+		void	handleCgiRequest(Client& currentClient);
+		void	handlePostRequest(Client& currentClient);
 		void	addFdToEpoll(int fd, uint32_t events);
 		void	handleCgiWrite(int pipeFd);
 
@@ -94,6 +95,6 @@ class WebServer
 };
 
 void handleDeleteRequest(Client& currentClient, const std::string& filePath);
-void handleGetRequest(Client &);
+void handleGetRequest(Client& currentClient);
 
 #endif
