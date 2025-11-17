@@ -16,6 +16,7 @@
 
 # include "../config/ServerConfig.hpp"
 # include "../utils/writeError.hpp"
+# include "../utils/trim.hpp"
 # include "../request/Request.hpp"
 
 # include <sys/socket.h>
@@ -23,6 +24,7 @@
 # include <sys/types.h>
 # include <sys/time.h>
 # include <unistd.h>
+# include <sstream>
 # include <ctime>
 # include <map>
 
@@ -55,7 +57,7 @@ class Client
 		ssize_t								sendPending();
 		std::string							genAbsPath(const std::string& path);
 		void								appendToCgiBuffer(const char* data, size_t len);
-		void								parseCgiResponse();
+		bool								parseCgiResponse();
 };
 
 #endif

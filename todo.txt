@@ -1,3 +1,1 @@
-reparer cgi
-
-cree un cgi get en c
+ajouter un time out au requette de 10s

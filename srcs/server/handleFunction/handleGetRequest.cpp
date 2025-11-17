@@ -46,7 +46,6 @@ void	handleGetRequest(Client &currentClient)
 	struct stat	info;
 
 	path = currentClient.getRequest().getPath();
-	std::cout << "GET: " << path << std::endl;
 	if (stat(path.c_str(), &info) == -1)
 		throw HttpStatus(404);
 	if (S_ISDIR(info.st_mode)) {

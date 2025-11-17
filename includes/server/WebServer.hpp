@@ -17,13 +17,14 @@
 #  define MAX_EVENTS 10
 #  define CLIENT_TIMEOUT_SECONDS 500
 #  define CGI_BUFFER_SIZE 100
+#  define CGI_TIMEOUT_SECONDS 10
 # endif
 
 # include "../httpGen/generateErrorPage.hpp"
 # include "../httpGen/generateAutoIndex.hpp"
 # include "../utils/setNonBlocking.hpp"
 # include "../config/ServerConfig.hpp"
-# include "../server/handleCgi.hpp"
+# include "handleFunction/handleCgi.hpp"
 # include "../utils/converters.hpp"
 # include "../utils/parsePath.hpp"
 # include "../request/Request.hpp"
@@ -34,6 +35,7 @@
 # include <cerrno>
 # include <cstdio>
 # include <cstring>
+# include <ctime>
 # include <sstream>
 # include <fstream>
 # include <fcntl.h>
@@ -50,8 +52,9 @@ struct CgiHandler
 	int		pipeReadFd;
 	int		pipeWriteFd;
 	size_t	bytesWritten;
+	std::time_t	startTime;
 
-	CgiHandler() : pid(0), pipeReadFd(-1), pipeWriteFd(-1), bytesWritten(0) {}
+	CgiHandler() : pid(0), pipeReadFd(-1), pipeWriteFd(-1), bytesWritten(0), startTime(0) {}
 };
 
 class WebServer
@@ -77,7 +80,13 @@ class WebServer
 		void	handleCgiRequest(Client& currentClient);
 		void	handlePostRequest(Client& currentClient);
 		void	addFdToEpoll(int fd, uint32_t events);
-		void	handleCgiWrite(int pipeFd);
+		void	handleCgiEvent(int pipeFd, uint32_t events);
+		void	writeCgiBody(int clientFd, Client& currentClient, CgiHandler& cgi);
+		void	readCgiOutput(int clientFd, Client& currentClient, CgiHandler& cgi);
+		void	finalizeCgiResponse(int clientFd, Client& currentClient, CgiHandler& cgi);
+		void	abortCgi(int clientFd, CgiHandler& cgi);
+		void	detachPipeFd(int fd);
+		void	checkCgiTimeouts();
 
 	public:
 		void	init();

@@ -14,7 +14,7 @@ static bool	hasPermissionForMode(const struct stat &buffer, mode_t userMask, mod
 	return ((buffer.st_mode & otherMask) == otherMask);
 }
 
-static void	ensureCanDeleteTarget(const struct stat &buffer, const std::string &filePath, bool isDirectory)
+static void	ensureCanDeleteTarget(const struct stat &buffer, bool isDirectory)
 {
 	bool	hasRights;
 
@@ -23,7 +23,6 @@ static void	ensureCanDeleteTarget(const struct stat &buffer, const std::string &
 	else
 		hasRights = hasPermissionForMode(buffer, S_IWUSR, S_IWGRP, S_IWOTH);
 	if (hasRights == false) {
-		std::cout << "Warning: insufficient rights to delete: " << filePath << std::endl;
 		throw HttpStatus(403);
 	}
 }
@@ -31,7 +30,6 @@ static void	ensureCanDeleteTarget(const struct stat &buffer, const std::string &
 static void	deleteDirectoryTarget(const std::string &filePath)
 {
 	if (std::remove(filePath.c_str()) == -1) {
-		std::cout << "Warning: cannot delete directory: " << filePath << " (" << std::strerror(errno) << ")" << std::endl;
 		if (errno == EACCES || errno == EPERM)
 			throw HttpStatus(403);
 		if (errno == ENOTEMPTY)
@@ -43,7 +41,6 @@ static void	deleteDirectoryTarget(const std::string &filePath)
 static void	deleteFileTarget(const std::string &filePath)
 {
 	if (std::remove(filePath.c_str()) == -1) {
-		std::cout << "Warning: cannot delete: " << filePath << " (" << std::strerror(errno) << ")" << std::endl;
 		if (errno == EACCES || errno == EPERM)
 			throw HttpStatus(403);
 		throw HttpStatus(500);
@@ -56,19 +53,16 @@ void handleDeleteRequest(Client& currentClient, const std::string& filePath)
 	struct stat							buffer;
 
 	if (stat(filePath.c_str(), &buffer) != 0) {
-		std::cout << "\033[33m" << "Warning: cannot delete: " << filePath << "\033[0m" << std::endl;
 		throw HttpStatus(404);
 	}
 	if (S_ISDIR(buffer.st_mode)) {
-		ensureCanDeleteTarget(buffer, filePath, true);
+		ensureCanDeleteTarget(buffer, true);
 		deleteDirectoryTarget(filePath);
 	} else if (S_ISREG(buffer.st_mode) != 0) {
-		ensureCanDeleteTarget(buffer, filePath, false);
+		ensureCanDeleteTarget(buffer, false);
 		deleteFileTarget(filePath);
 	} else {
-		std::cout << "\033[33m" << "Warning: unsupported target type for delete: " << filePath << "\033[0m" << std::endl;
 		throw HttpStatus(403);
 	}
-	std::cout << "DELETE: " << filePath << std::endl;
 	currentClient.generateResponse(204, headers, "");
 }

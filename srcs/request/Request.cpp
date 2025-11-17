@@ -294,7 +294,6 @@ void Request::logRequest(int fd)
 	for (std::map<std::string, std::string>::iterator it = _headers.begin(); it != _headers.end(); it++)
 		std::cout << it->first << ": " << it->second << std::endl;
 	std::cout << std::endl << _body << std::endl;
-	std::cout << std::endl << "\033[32m" << "Response on fd " << fd << " ----------------------------------------------" << "\033[0m" << std::endl;
 }
 
 void Request::clear()
@@ -350,7 +349,6 @@ std::string							Request::getHeader(const std::string& headerName) const
 
 void	Request::setPath(std::string newPath)		{ _path = newPath; }
 void	Request::setSecondPath(std::string newPath)	{ _secondPath = newPath; }
-
 
 // Constructor
 Request::Request(const ServerConfig& config) : _config(config)

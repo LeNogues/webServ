@@ -23,13 +23,22 @@ void WebServer::handleClientWrite(int currentFd)
 	}
 	Client&	currentClient = it->second;
 
+	if (!currentClient.hasResponse()) {
+		if (_clientToCgi.count(currentFd))
+			return;
+		writeError("Error: no response ready for fd: " + intToString(currentFd));
+		handleClientDisconnection(currentFd);
+		return;
+	}
 	if (currentClient.sendPending() <= 0) {
 		writeError("Error: send() failed for fd: " + intToString(currentFd));
 		handleClientDisconnection(currentFd);
 		return;
-	} else if (currentClient.hasResponse()) {
+	}
+	if (currentClient.hasResponse()) {
 		return;
-	} else if (currentClient.getShouldClose()) {
+	}
+	if (currentClient.getShouldClose()) {
 		handleClientDisconnection(currentFd);
 	} else {
 		currentClient.getRequest().clear();
@@ -60,7 +69,6 @@ void WebServer::failedRequest(const HttpStatus& status, Client& currentClient)
 	std::map<int, std::string>::const_iterator	itPage = errorPage.find(status.getStatusCode());
 	std::pair<int, std::string>					redirect = currentClient.getRequest().getLocation()._redirect;
 
-	std::cerr << status.what() << '\n';
 	if (redirect.first != 0 && !redirect.second.empty()) {
 		if (redirect.first >= 300 && redirect.first <= 308)
 			headers["Location"] = redirect.second;
@@ -104,8 +112,12 @@ void WebServer::handleClientRead(int currentFd)
 		currentClient.getRequest().logRequest( currentFd );
 		executeRequest(currentClient);
 	} catch(const HttpStatus& status) {
+		if (!currentClient.getRequest().getIsValid()) {
+			std::cout << "\033[31m" << "Unvalid request on fd " << currentFd << " -----------------------------------------------" << "\033[0m" << std::endl;
+			std::cout << std::string(buffer, bytes_read) << std::endl;
+		}
 		failedRequest(status, currentClient);
 	}
-	std::cout << std::endl << "\033[0m" << std::endl;
-	switchToWrite(currentFd);
+	if (_clientToCgi.count(currentFd) == 0 || currentClient.hasResponse())
+		switchToWrite(currentFd);
 }

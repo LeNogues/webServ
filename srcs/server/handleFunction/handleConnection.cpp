@@ -48,23 +48,14 @@ void WebServer::handleClientDisconnection(int clientFd)
 		return;
 	if (_clientToCgi.count(clientFd)) {
 		CgiHandler& cgi = _clientToCgi[clientFd];
-		//kill the cgi process
 		if (cgi.pid > 0) {
 			kill(cgi.pid, SIGKILL);
 			waitpid(cgi.pid, NULL, 0);
 		}
-		//clean the read pipe
-		if (cgi.pipeReadFd != -1) {
-			epoll_ctl(_epollFD, EPOLL_CTL_DEL, cgi.pipeReadFd, NULL);
-			close(cgi.pipeReadFd);
-			_pipeToClient.erase(cgi.pipeReadFd);
-		}
-		//clean the write pipe
-		if (cgi.pipeWriteFd != -1) {
-			epoll_ctl(_epollFD, EPOLL_CTL_DEL, cgi.pipeWriteFd, NULL);
-			close(cgi.pipeWriteFd);
-			_pipeToClient.erase(cgi.pipeWriteFd);
-		}
+		if (cgi.pipeReadFd != -1)
+			detachPipeFd(cgi.pipeReadFd);
+		if (cgi.pipeWriteFd != -1)
+			detachPipeFd(cgi.pipeWriteFd);
 		_clientToCgi.erase(clientFd);
 	}
 	std::cout << "\033[31m" << "Client " << clientFd << " disconnected." << "\033[0m" << std::endl;

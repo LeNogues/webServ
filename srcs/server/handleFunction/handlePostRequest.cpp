@@ -12,18 +12,8 @@
 
 #include "../../../includes/server/WebServer.hpp"
 
-void WebServer::handlePostRequest(Client& currentClient)
+static void createFile(Client& currentClient)
 {
-	std::string contentType = currentClient.getRequest().getHeader("Content-Type");
-	if(contentType.find("multipart/form-data") != std::string::npos) {
-		std::cout << "post Path:" << currentClient.getRequest().getPath() << std::endl;
-		currentClient.getRequest().setSecondPath(currentClient.getRequest().getUri());
-		currentClient.getRequest().setPath("./cgi/upload.php");
-		std::cout << "SecondPath:" << currentClient.getRequest().getSecondPath() << std::endl;
-		std::cout << "Path:"  << currentClient.getRequest().getPath() << std::endl;
-		handleCgiRequest(currentClient);
-		return ;
-	}
 	std::string filePath = currentClient.getRoot() + currentClient.getRequest().getUri();
 	std::cout << "filePath is : " << filePath << std::endl;
 	std::string body = currentClient.getRequest().getBody();
@@ -40,8 +30,19 @@ void WebServer::handlePostRequest(Client& currentClient)
 	}
 	outputFile << body;
 	outputFile.close();
-	std::cout << "Fichier créé avec succès: " << filePath << std::endl;
+	std::cout << "File created successfully: " << filePath << std::endl;
 	std::map<std::string, std::string> headers;
 	headers["Content-Type"] = "text/plain";
-	currentClient.generateResponse(201, headers, "Ressource créée avec succès.");
+	currentClient.generateResponse(201, headers, "Resource created successfully.");
+}
+
+void WebServer::handlePostRequest(Client& currentClient)
+{
+	if(currentClient.getRequest().getHeader("Content-Type").find("multipart/form-data") != std::string::npos) {
+		currentClient.getRequest().setSecondPath(currentClient.getRequest().getUri());
+		currentClient.getRequest().setPath("./cgi/upload.php");
+		handleCgiRequest(currentClient);
+	} else {
+		createFile(currentClient);
+	}
 }

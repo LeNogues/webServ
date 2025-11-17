@@ -31,6 +31,7 @@ std::map<int, std::string>	initStatusCodes(void)
 	codes[501] = "HTTP/1.1 501 Not Implemented";
 	codes[502] = "HTTP/1.1 502 Bad Gateway";
 	codes[503] = "HTTP/1.1 503 Service Unavailable";
+	codes[504] = "HTTP/1.1 504 Gateway Timeout";
 	codes[505] = "HTTP/1.1 505 HTTP Version Not Supported";
 	return (codes);
 }
