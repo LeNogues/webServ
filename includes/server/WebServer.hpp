@@ -91,6 +91,7 @@ class WebServer
 	public:
 		void	init();
 		void	run();
+		void	cleanup();
 		std::map<int, int>			_cgiFd;
 		std::map<int, int>			_pipeToClient;
 		std::map<int, CgiHandler>	_clientToCgi;

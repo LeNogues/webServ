@@ -322,6 +322,18 @@ void WebServer::init()
 	}
 }
 
+void	WebServer::cleanup()
+{
+	std::map<int, Client>::iterator	it_cli = _clients.begin();
+	std::vector<ServerConfig>::iterator it_serv = _servers.begin();
+
+	for (; it_cli != _clients.end(); it_cli++)
+		close(it_cli->second._clientFd);
+	for (; it_serv != _server.end(); it_serv++)
+		close(it_serv->
+	close(_epollFD);
+}
+
 const char* WebServer::signalException::what() const throw()
 {
 	return ("\nServer interrupted by signal");
