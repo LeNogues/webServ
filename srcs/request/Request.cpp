@@ -172,7 +172,8 @@ void Request::checkHeader(void)
 			throw HttpStatus(501);
 		_isChunked = true;
 	}
-	_isValid = true;
+	if (!_bodyNecessary)
+		_isValid = true;
 }
 
 int Request::processRequest()
