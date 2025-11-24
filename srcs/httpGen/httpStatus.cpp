@@ -1,7 +1,5 @@
 #include "../../includes/httpGen/httpStatus.hpp"
 
-std::map<int, std::string>	STATUS_CODES = initStatusCodes();
-
 std::map<int, std::string>	initStatusCodes(void)
 {
 	std::map<int, std::string>	codes;
@@ -25,6 +23,7 @@ std::map<int, std::string>	initStatusCodes(void)
 	codes[404] = "HTTP/1.1 404 Not Found";
 	codes[405] = "HTTP/1.1 405 Method Not Allowed";
 	codes[408] = "HTTP/1.1 408 Request Timeout";
+	codes[409] = "HTTP/1.1 409 Conflict";
 	codes[411] = "HTTP/1.1 411 Length Required";
 	codes[413] = "HTTP/1.1 413 Payload Too Large";
 	codes[414] = "HTTP/1.1 414 URI Too Long";
@@ -32,12 +31,14 @@ std::map<int, std::string>	initStatusCodes(void)
 	codes[501] = "HTTP/1.1 501 Not Implemented";
 	codes[502] = "HTTP/1.1 502 Bad Gateway";
 	codes[503] = "HTTP/1.1 503 Service Unavailable";
+	codes[504] = "HTTP/1.1 504 Gateway Timeout";
 	codes[505] = "HTTP/1.1 505 HTTP Version Not Supported";
 	return (codes);
 }
 
 std::string	getStatusMessage(int statusCode)
 {
+	static std::map<int, std::string>			STATUS_CODES = initStatusCodes();
 	std::map<int, std::string>::const_iterator	it;
 
 	it = STATUS_CODES.find(statusCode);

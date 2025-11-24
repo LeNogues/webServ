@@ -3,34 +3,31 @@
 void Request::setLocation(const std::string& path)
 {
 	const std::map<std::string, LocationConfig>* current = &_config._location;
-	std::string search = path;
+	std::map<std::string, LocationConfig>::const_iterator it;
 	static_cast<CommonConfig&>(_location) = _config;
+	const LocationConfig*	bestMatch;
+	std::string				candidate;
+	bool					valideBack;
 
 	while (true)
 	{
-		const LocationConfig* bestMatch = NULL;
-		std::string candidate = search;
-
-		while (true)
-		{
-			std::map<std::string, LocationConfig>::const_iterator it = current->find(candidate);
-			if (it != current->end())
-			{
+		candidate = path;
+		valideBack = true;
+		bestMatch = NULL;
+		while (valideBack) {
+			it = current->find(candidate);
+			if (it != current->end()) {
 				bestMatch = &it->second;
 				break;
 			}
-			if (!backPath(candidate))
-				break;
+			valideBack = backPath(candidate);
 		}
-
 		if (bestMatch == NULL)
 			break;
 		_location = *bestMatch;
 		if (bestMatch->_locations.empty())
 			break;
-
 		current = &bestMatch->_locations;
-		search = path;
 	}
 	if (_location._redirect.first != 0)
 		throw HttpStatus(_location._redirect.first);
@@ -41,10 +38,8 @@ static std::string findExecutable(const std::string& path)
 	std::string	executable = path;
 	struct stat	info;
 
-	while (executable.size() > 9)
-	{
-		if (stat(executable.c_str(), &info) == 0 && S_ISREG(info.st_mode))
-		{
+	while (executable.size() > 9) {
+		if (stat(executable.c_str(), &info) == 0 && S_ISREG(info.st_mode)) {
 			if (access(executable.c_str(), X_OK) == 0)
 				return (executable);
 			else
@@ -61,8 +56,7 @@ void Request::addPath(const std::string&  word)
 	std::string truePath;
 	std::string query = "";
 
-	if (path.find("?") != std::string::npos)
-	{
+	if (path.find("?") != std::string::npos) {
 		query = path.substr(path.find("?") + 1);
 		path = path.substr(0, path.find("?"));
 	}
@@ -75,15 +69,12 @@ void Request::addPath(const std::string&  word)
 		truePath = _location._alias.second + path.substr(path.find(_location._alias.first) + _location._alias.first.size());
 	else
 		truePath = _location._root + path;
-	if (path.substr(0, 9) == "/cgi-bin/")
-	{
+	if (path.substr(0, 9) == "/cgi-bin/") {
 		_isCGI = true;
 		_path = findExecutable(truePath);
 		if (_path.size() < truePath.size())
 			_secondPath = truePath.substr(_path.size());
-	}
-	else
-	{
+	} else {
 		_isCGI = false;
 		_path = truePath;
 	}
@@ -114,8 +105,7 @@ void Request::checkRequest(const std::string& request)
 	std::string			method;
 	int					wordCount = 0;
 
-	while (iss >> word && wordCount < 3)
-	{
+	while (iss >> word && wordCount < 3) {
 		if (wordCount == 0)
 			method = word;
 		else if (wordCount == 1)
@@ -139,8 +129,7 @@ void Request::splitHeader(const size_t end)
 	size_t	pos = 0;
 
 	pos = _request.find("\r\n", start);
-	while(pos <= end)
-	{
+	while(pos <= end) {
 		std::string	line = _request.substr(start, pos - start);
 		size_t		colonPos = line.find(':');
 		if (line.find("\r") != std::string::npos || colonPos == std::string::npos)
@@ -164,34 +153,25 @@ void Request::checkHeader(void)
 
 	if (_headers.find("Host") == _headers.end())
 		throw HttpStatus(400);
-
 	if (contentLength != _headers.end() && transferEncoding != _headers.end())
 		throw HttpStatus(400);
-
-	if (_method == "POST")
-	{
+	if (_method == "POST") {
 		_bodyNecessary = true;
 		if (contentLength == _headers.end() && transferEncoding == _headers.end())
 			throw HttpStatus(411);
-	}
-	else
+	} else
 		_bodyNecessary = false;
-
-	if (contentLength != _headers.end())
-	{
+	if (contentLength != _headers.end()) {
 		if (!strToSizeT(contentLength->second, _contentLength, 10))
 			throw HttpStatus(400);
 		if (_contentLength > _location._maxSizeBody)
 			throw HttpStatus(413);
 	}
-
-	if (transferEncoding != _headers.end())
-	{
+	if (transferEncoding != _headers.end()) {
 		if (transferEncoding->second != "chunked")
 			throw HttpStatus(501);
 		_isChunked = true;
 	}
-
 	_isValid = true;
 }
 
@@ -240,8 +220,7 @@ int Request::processChunkedRequest()
 	size_t	pos = _request.find("\r\n");
 	if (pos == std::string::npos)
 		return (0);
-	while (pos != std::string::npos)
-	{
+	while (pos != std::string::npos) {
 		std::string	chunk, hex;
 		size_t	chunkSize;
 		chunk = _request.substr(0, pos);
@@ -274,7 +253,6 @@ int Request::processChunkedRequest()
 
 int 	Request::ProcessTrailer()
 {
-	// TODO: check potential not detected end
 	size_t	pos = _request.find("\r\n\r\n");
 	if (pos == std::string::npos)
 		return (0);
@@ -295,8 +273,7 @@ int Request::parseRequest(const std::string& request)
 		return (0);
 	if (!_haveHeader && !ProcessHeader())
 		return (0);
-	if (!_haveBody)
-	{
+	if (!_haveBody) {
 		if (!_isChunked)
 			return (validateAndSetBody());
 		else if (!processChunkedRequest())
@@ -307,8 +284,9 @@ int Request::parseRequest(const std::string& request)
 	return (1);
 }
 
-void Request::logRequest()
+void Request::logRequest(int fd)
 {
+	std::cout << std::endl << "\033[34m" << "Request on fd " << fd << " -----------------------------------------------" << "\033[0m" << std::endl;
 	std::cout << _method << " " << _uri;
 	if (!_query.empty())
 		std::cout << "?" << _query;
@@ -340,28 +318,24 @@ void Request::clear()
 }
 
 // Getters
-const LocationConfig& Request::getLocation()				const{ return _location; }
-bool Request::getIsValid()									const{ return _isValid; }
-std::string Request::getMethod()							const{ return _method; }
-std::string Request::getUri()								const{ return _uri; }
-std::string Request::getPath()								const{ return _path; }
-bool Request::getIsCGI()									const{ return _isCGI; }
-std::string Request::getSecondPath()						const{ return _secondPath; }
-std::string Request::getQuery()								const{ return _query; }
-std::string Request::getPrtcl()								const{ return _protocol; }
-std::string Request::getBody()								const{ return _body; }
-std::map<std::string, std::string> Request::getHeaders()	const{ return _headers; }
-std::string Request::getHeader(const std::string& headerName) const
+const LocationConfig&				Request::getLocation()		const{ return _location; }
+bool 								Request::getIsValid()		const{ return _isValid; }
+std::string							Request::getMethod()		const{ return _method; }
+std::string							Request::getUri()			const{ return _uri; }
+std::string							Request::getPath()			const{ return _path; }
+bool								Request::getIsCGI()			const{ return _isCGI; }
+std::string							Request::getSecondPath()	const{ return _secondPath; }
+std::string							Request::getQuery()			const{ return _query; }
+std::string							Request::getPrtcl()			const{ return _protocol; }
+std::string							Request::getBody()			const{ return _body; }
+std::map<std::string, std::string>	Request::getHeaders()		const{ return _headers; }
+std::string							Request::getHeader(const std::string& headerName) const
 {
-	for (std::map<std::string, std::string>::const_iterator it = _headers.begin(); it != _headers.end(); ++it)
-	{
-		if (it->first.length() == headerName.length())
-		{
+	for (std::map<std::string, std::string>::const_iterator it = _headers.begin(); it != _headers.end(); ++it) {
+		if (it->first.length() == headerName.length()) {
 			bool match = true;
-			for (size_t i = 0; i < it->first.length(); ++i)
-			{
-				if (std::tolower(it->first[i]) != std::tolower(headerName[i]))
-				{
+			for (size_t i = 0; i < it->first.length(); ++i) {
+				if (std::tolower(it->first[i]) != std::tolower(headerName[i])) {
 					match = false;
 					break;
 				}
@@ -373,16 +347,8 @@ std::string Request::getHeader(const std::string& headerName) const
 	return "";
 }
 
-void								Request::setSecondPath(std::string newPath)
-{
-	_secondPath = newPath;
-}
-
-void								Request::setPath(std::string newPath)
-{
-	_path = newPath;
-}
-
+void	Request::setPath(std::string newPath)		{ _path = newPath; }
+void	Request::setSecondPath(std::string newPath)	{ _secondPath = newPath; }
 
 // Constructor
 Request::Request(const ServerConfig& config) : _config(config)
@@ -405,8 +371,7 @@ Request::Request(const ServerConfig& config) : _config(config)
 	_isValid = false;
 }
 
-Request::Request(const Request& other)
-	: _config(other._config)
+Request::Request(const Request& other) : _config(other._config)
 {
 	*this = other;
 }

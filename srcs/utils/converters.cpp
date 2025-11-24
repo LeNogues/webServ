@@ -1,6 +1,6 @@
 #include "../../includes/utils/converters.hpp"
 
-bool strToSizeT(const std::string& str, size_t& size, int base)
+bool	strToSizeT(const std::string& str, size_t& size, int base)
 {
 	char*	end;
 	errno = 0;
@@ -18,7 +18,7 @@ bool strToSizeT(const std::string& str, size_t& size, int base)
 	return true;
 }
 
-std::string intToString(int intToConvert)
+std::string	intToString(int intToConvert)
 {
 	std::string str;
 	std::ostringstream convertStream;
@@ -27,7 +27,7 @@ std::string intToString(int intToConvert)
 	return (str);
 }
 
-bool fileToString(const std::string& path, std::string& out)
+bool	fileToString(const std::string& path, std::string& out)
 {
 	std::ifstream		ifs;
 	std::stringstream	buffer;

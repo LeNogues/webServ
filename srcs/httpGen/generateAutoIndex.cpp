@@ -59,8 +59,7 @@ static std::string	buildHeader(const std::string& path)
 		"<body>\n"
 			"<h1> Index of " + path + "</h1>\n"
 			"<div class=\"autoindex-container\">\n";
-
-	return header;
+	return (header);
 }
 
 static std::string	buildFooter(void)
@@ -70,11 +69,10 @@ static std::string	buildFooter(void)
 	footer = "</div>\n"
 		"</body>\n"
 		"</html>\n";
-
-	return footer;
+	return (footer);
 }
 
-static void			appendEntryLine(std::string& body, const std::string& entryName, int isDir)
+static void	appendEntryLine(std::string& body, const std::string& entryName, int isDir)
 {
 	std::string	displayName = entryName;
 	std::string	itemClass = isDir ? "dir" : "file";
@@ -84,7 +82,7 @@ static void			appendEntryLine(std::string& body, const std::string& entryName, i
 	body += "<div class=\"item " + itemClass + "\"><a href=\"" + entryName + "\">" + displayName + "</a></div>\n";
 }
 
-static void			appendDirectoryEntries(std::string& body, const std::string& path, DIR* dir)
+static void	appendDirectoryEntries(std::string& body, const std::string& path, DIR* dir)
 {
 	struct dirent*	entry = NULL;
 	struct stat		entryStat;
@@ -92,8 +90,7 @@ static void			appendDirectoryEntries(std::string& body, const std::string& path,
 	std::string		entryName;
 	std::string		entryPath;
 
-	while ((entry = readdir(dir)) != NULL)
-	{
+	while ((entry = readdir(dir)) != NULL) {
 		entryName = std::string(entry->d_name);
 		entryPath = path;
 		if (!path.empty() && path[path.size() - 1] != '/')
@@ -108,7 +105,7 @@ static void			appendDirectoryEntries(std::string& body, const std::string& path,
 	}
 }
 
-std::string			generateAutoIndex(const std::string& path)
+std::string	generateAutoIndex(const std::string& path)
 {
 	std::string	body = "";
 	DIR*		dir = opendir(path.c_str());
@@ -119,6 +116,5 @@ std::string			generateAutoIndex(const std::string& path)
 	appendDirectoryEntries(body, path, dir);
 	body += buildFooter();
 	closedir(dir);
-
-	return body;
+	return (body);
 }

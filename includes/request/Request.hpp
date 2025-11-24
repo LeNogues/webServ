@@ -8,13 +8,12 @@
 # include "../utils/trim.hpp"
 
 # include <sys/stat.h>
-# include <unistd.h>
 # include <algorithm>
+# include <unistd.h>
 # include <iostream>
-# include <sstream>
 # include <string>
-# include <vector>
 # include <map>
+
 // TODO:
 class Request
 {
@@ -58,10 +57,10 @@ class Request
 
 	public:
 		int parseRequest(const std::string& request);
-		void logRequest();
+		void logRequest(int fd);
 		void clear();
 
-		// Getters
+		// Getters/Setters
 		std::string 						getHeader(const std::string& name) const;
 		std::map<std::string, std::string> 	getHeaders()	const;
 		const LocationConfig& 				getLocation()	const;

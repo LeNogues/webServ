@@ -1,21 +1,41 @@
-#include "../../../includes/server/handleCgi.hpp"
-#include "handleCgi.hpp"
+#include "../../../includes/server/WebServer.hpp"
 
-static std::string generatePath(Client& currentClient, std::string path)
+static void	closePair(int pipeFd[2])
 {
-    LocationConfig location = currentClient.getRequest().getLocation();
-    if (!location._alias.second.empty())
-    {
-        size_t pos = path.find(location._alias.first);
-        if (pos != std::string::npos)
-            return (location._alias.second + path.substr(pos + location._alias.first.size()));
-        return (location._alias.second + path);
-    }
-    return (location._root + path);
+	if (pipeFd[0] != -1)
+		close(pipeFd[0]);
+	if (pipeFd[1] != -1)
+		close(pipeFd[1]);
 }
 
-static char **createEnv(Client& currentClient, std::vector<std::string> env)
+static void	closePipe(int pipe1[2], int pipe2[2])
 {
+	closePair(pipe1);
+	closePair(pipe2);
+}
+
+static std::string	generatePath(Client& currentClient, std::string path)
+{
+	LocationConfig	location;
+	size_t			pos;
+
+	location = currentClient.getRequest().getLocation();
+	if (!location._alias.second.empty())
+	{
+		pos = path.find(location._alias.first);
+		if (pos != std::string::npos)
+			return (location._alias.second + path.substr(pos + location._alias.first.size()));
+		return (location._alias.second + path);
+	}
+	return (location._root + path);
+}
+
+static char	**createEnv(Client& currentClient, std::vector<std::string> env)
+{
+	char	**envp;
+	size_t	envSize;
+	size_t	i;
+
 	env.push_back("AUTH_TYPE=" + currentClient.getRequest().getHeader("Authorization"));
 	env.push_back("CONTENT_LENGTH=" + currentClient.getRequest().getHeader("Content-Length"));
 	env.push_back("CONTENT_TYPE=" + currentClient.getRequest().getHeader("Content-Type"));
@@ -31,145 +51,118 @@ static char **createEnv(Client& currentClient, std::vector<std::string> env)
 	env.push_back("SERVER_PROTOCOL=HTTP/1.1");
 	env.push_back("SERVER_SOFTWARE=webserv/1.0");
 	env.push_back("REQUEST_URI=" + currentClient.getRequest().getUri());
-    env.push_back("REDIRECT_STATUS=200");
-    env.push_back("SCRIPT_FILENAME=" + currentClient.getRequest().getPath());
-
-	char **envp = new char*[env.size() + 1];
-	size_t i = 0;
-	for (std::vector<std::string>::iterator it = env.begin(); it != env.end(); it++)
+	env.push_back("REDIRECT_STATUS=200");
+	env.push_back("SCRIPT_FILENAME=" + currentClient.getRequest().getPath());
+	envSize = env.size();
+	envp = new char*[envSize + 1];
+	i = 0;
+	while (i < envSize)
 	{
-		envp[i] = new char[it->size() + 1];
-		std::strcpy(envp[i], it->c_str());
+		envp[i] = new char[env[i].size() + 1];
+		std::strcpy(envp[i], env[i].c_str());
 		i++;
 	}
 	envp[i] = NULL;
 	return (envp);
 }
 
-std::string trim(const std::string& str) {
-    size_t first = str.find_first_not_of(" \t\n\r");
-    if (std::string::npos == first) {
-        return str;
-    }
-    size_t last = str.find_last_not_of(" \t\n\r");
-    return str.substr(first, (last - first + 1));
-}
-
-void closeAllFd(int pipeOut[2], int pipeIn[2])
+void	CreateEnvAndExecute(Client &currentClient, std::vector<std::string> &env)
 {
-	close(pipeOut[0]);
-	close(pipeOut[1]);
-	close(pipeIn[0]);
-	close(pipeIn[1]);
-}
+	std::string	scriptPath;
+	const char	*pathToScript;
+	const char	*scriptArgv[2];
+	const char	*phpArgv[3];
+	char		**envp;
+	size_t		i;
 
-void createHeaders(std::string line, std::map<std::string, std::string>& headers)
-{
-    size_t colonPos = line.find(':');
-    if (colonPos != std::string::npos)
+	scriptPath = currentClient.getRequest().getPath();
+	pathToScript = scriptPath.c_str();
+	envp = createEnv(currentClient, env);
+	if (scriptPath.find(".php") != std::string::npos)
 	{
-        std::string key = trim(line.substr(0, colonPos));
-        std::string value = trim(line.substr(colonPos + 1));
-        if (!key.empty() && !value.empty())
-            headers[key] = value;
-    }
-}
-
-void CreateEnvAndExecute(Client &currentClient, std::vector<std::string> &env, Request &request, const char *test, int pipeOut[2], int pipeIn[2])
-{
-    (void)request;
-    char **envp = createEnv(currentClient, env);
-    std::string path_str = request.getPath();
-    const char *path = path_str.c_str();
-    const char *argv[] = {test, NULL};
-
-    dup2(pipeOut[1], STDOUT_FILENO);
-    dup2(pipeIn[0], STDIN_FILENO);
-    closeAllFd(pipeOut, pipeIn);
-
-    std::cerr << "path : " << path << std::endl;
-    execve(path, const_cast<char *const *>(argv), envp);
-
-    perror("execve");
-        for (size_t i = 0; envp[i] != NULL; ++i)
-            delete[] envp[i];
-    delete[] envp;
-    throw std::exception();
-}
-
-void createResponse(int pipeOut[2], std::string &cgiResponse)
-{
-    char buffer[4096];
-    ssize_t bytes_read;
-    while ((bytes_read = read(pipeOut[0], buffer, sizeof(buffer))) > 0)
-        cgiResponse.append(buffer, bytes_read);
-}
-
-void CreateHeaderAndGenerate(std::string &cgiResponse, Client &currentClient)
-{
-    std::map<std::string, std::string> headers;
-    std::string responseBody;
-    size_t separatorPos = cgiResponse.find("\r\n\r\n");
-    if (separatorPos == std::string::npos)
-        separatorPos = cgiResponse.find("\n\n");
-    if (separatorPos != std::string::npos)
-    {
-        std::string headerBlock = cgiResponse.substr(0, separatorPos);
-        responseBody = cgiResponse.substr(separatorPos + (cgiResponse.find("\r\n\r\n") != std::string::npos ? 4 : 2));
-
-        std::stringstream ss(headerBlock);
-        std::string line;
-        while (std::getline(ss, line))
-            createHeaders(line, headers);
-    }
-    else
-        responseBody = cgiResponse;
-
-    currentClient.generateResponse(200, headers, responseBody);
-}
-
-void closeAndThrow(int pipeOut[2], int pipeIn[2])
-{
-    closeAllFd(pipeOut, pipeIn);
-    throw HttpStatus(500);
-}
-
-void handleCgiRequest(Client& currentClient, std::vector<std::string> env)
-{
-	Request request = currentClient.getRequest();
-	std::string cgiResponse;
-	std::string test1 = request.getBody();
-	const char *test = test1.c_str();
-
-	int pipeOut[2];
-	int pipeIn[2];
-
-	if (pipe(pipeOut) == -1 || pipe(pipeIn) == -1)
-		throw HttpStatus(500);
-
-	pid_t pid = fork();
-
-	if (pid == -1)
-        closeAndThrow(pipeOut, pipeIn);
-
-	if (pid == 0)
-        CreateEnvAndExecute(currentClient, env, request, test, pipeOut, pipeIn);
+		phpArgv[0] = "/usr/bin/php-cgi";
+		phpArgv[1] = pathToScript;
+		phpArgv[2] = NULL;
+		execve("/usr/bin/php-cgi", const_cast<char *const *>(phpArgv), envp);
+	}
 	else
 	{
-		close(pipeOut[1]);
-		close(pipeIn[0]);
+		scriptArgv[0] = pathToScript;
+		scriptArgv[1] = NULL;
+		execve(pathToScript, const_cast<char *const *>(scriptArgv), envp);
+	}
+	i = 0;
+	while (envp[i] != NULL)
+	{
+		delete[] envp[i];
+		i++;
+	}
+	delete[] envp;
+	throw std::exception();
+}
 
-		std::string body = request.getBody();
-		if (!body.empty())
-			write(pipeIn[1], body.c_str(), body.length());
+static void	setNonBlockingFd(int fd)
+{
+	int	flags;
+
+	flags = fcntl(fd, F_GETFL, 0);
+	if (flags == -1)
+		return;
+	fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+}
+
+void	WebServer::handleCgiRequest(Client& currentClient)
+{
+	std::string	requestBody = currentClient.getRequest().getBody();
+	int			pipeOut[2] = {-1, -1};
+	int			pipeIn[2] = {-1, -1};
+	int			clientFd;
+	bool		hasBody;
+	CgiHandler	handler;
+	pid_t		pid;
+
+	if (pipe(pipeOut) == -1 || pipe(pipeIn) == -1)
+	{
+		closePipe(pipeOut, pipeIn);
+		throw HttpStatus(500);
+	}
+	pid = fork();
+	if (pid == -1)
+	{
+		closePipe(pipeOut, pipeIn);
+		throw HttpStatus(500);
+	}
+	if (pid == 0)
+	{
+		if (dup2(pipeIn[0], STDIN_FILENO) == -1 || dup2(pipeOut[1], STDOUT_FILENO) == -1)
+		{
+			closePipe(pipeOut, pipeIn);
+			exit(EXIT_FAILURE);
+		}
+		closePipe(pipeOut, pipeIn);
+		CreateEnvAndExecute(currentClient, _envp);
+		exit(EXIT_FAILURE);
+	}
+	close(pipeOut[1]);
+	close(pipeIn[0]);
+	setNonBlockingFd(pipeOut[0]);
+	hasBody = !requestBody.empty();
+	if (hasBody)
+		setNonBlockingFd(pipeIn[1]);
+	else
 		close(pipeIn[1]);
-
-        createResponse(pipeOut, cgiResponse);
-
-        close(pipeOut[0]);
-		waitpid(pid, NULL, 0);
-
-        CreateHeaderAndGenerate(cgiResponse, currentClient);
-    }
-    return ;
+	clientFd = currentClient._clientFd;
+	handler.pid = pid;
+	handler.pipeReadFd = pipeOut[0];
+	handler.pipeWriteFd = hasBody ? pipeIn[1] : -1;
+	handler.bytesWritten = 0;
+	handler.startTime = std::time(NULL);
+	_pipeToClient[pipeOut[0]] = clientFd;
+	addFdToEpoll(pipeOut[0], EPOLLIN);
+	if (hasBody)
+	{
+		_pipeToClient[pipeIn[1]] = clientFd;
+		addFdToEpoll(pipeIn[1], EPOLLOUT);
+	}
+	_clientToCgi[clientFd] = handler;
 }

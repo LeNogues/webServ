@@ -3,7 +3,6 @@
 
 #include <exception>
 #include <string>
-#include <algorithm>
 #include <map>
 
 extern std::map<int, std::string>	STATUS_CODES;
@@ -21,10 +20,10 @@ class HttpStatus : public std::exception
 		HttpStatus(int code);
 		HttpStatus(const HttpStatus& other);
 		HttpStatus&	operator=(const HttpStatus& other);
-		virtual			~HttpStatus() throw();
+		virtual	~HttpStatus() throw();
 
-		virtual const char*	what() const throw();
-		int					getStatusCode() const;
+		virtual const char*		what() const throw();
+		int						getStatusCode() const;
 };
 
 #endif

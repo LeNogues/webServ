@@ -12,8 +12,7 @@
 
 #include "../../includes/utils/writeError.hpp"
 
-int writeError(std::string str, int returnValue){
+void	writeError(const std::string& str)
 {
-    std::cerr << str << std::endl;
-    return (returnValue);
-}}
+	std::cerr << "\033[31m" << str << "\033[0m" << std::endl;
+}

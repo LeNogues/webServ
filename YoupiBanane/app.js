@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		setStatus(statusUpload, 'Téléversement en cours...', 'black');
 
-		fetch('/image/test/', {
+		fetch('/post_folder/', {
 			method: 'POST',
 			body: formData
 		})
