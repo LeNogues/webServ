@@ -92,11 +92,12 @@ void WebServer::handleClientRead(int currentFd)
 		return;
 	}
 	Client&	currentClient = it->second;
+	Request& currentRequest = currentClient.getRequest();
 	char	buffer[4096];
 	ssize_t	bytes_read;
 
 	try {
-		while (!currentClient.getRequest().getIsValid()) {
+		while (!currentRequest.getIsValid()) {
 			bytes_read = recv(currentFd, buffer, sizeof(buffer), 0);
 			if (bytes_read <= 0) {
 				if (bytes_read == 0)
@@ -106,13 +107,13 @@ void WebServer::handleClientRead(int currentFd)
 				handleClientDisconnection(currentFd);
 				return;
 			}
-			currentClient.getRequest().parseRequest(std::string(buffer, bytes_read));
+			currentRequest.parseRequest(std::string(buffer, bytes_read));
 		}
-		currentClient.setLocation(currentClient.getRequest().getLocation());
-		currentClient.getRequest().logRequest( currentFd );
+		currentClient.setLocation(currentRequest.getLocation());
+		currentRequest.logRequest( currentFd );
 		executeRequest(currentClient);
 	} catch(const HttpStatus& status) {
-		if (!currentClient.getRequest().getIsValid()) {
+		if (!currentRequest.getIsValid()) {
 			std::cout << "\033[31m" << "Unvalid request on fd " << currentFd << " -----------------------------------------------" << "\033[0m" << std::endl;
 			std::cout << std::string(buffer, bytes_read) << std::endl;
 		}

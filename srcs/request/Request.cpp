@@ -155,22 +155,20 @@ void Request::checkHeader(void)
 		throw HttpStatus(400);
 	if (contentLength != _headers.end() && transferEncoding != _headers.end())
 		throw HttpStatus(400);
-	if (_method == "POST") {
-		_bodyNecessary = true;
-		if (contentLength == _headers.end() && transferEncoding == _headers.end())
+	if (_method == "POST" && contentLength == _headers.end() && transferEncoding == _headers.end())
 			throw HttpStatus(411);
-	} else
-		_bodyNecessary = false;
 	if (contentLength != _headers.end()) {
 		if (!strToSizeT(contentLength->second, _contentLength, 10))
 			throw HttpStatus(400);
 		if (_contentLength > _location._maxSizeBody)
 			throw HttpStatus(413);
+		_bodyNecessary = true;
 	}
 	if (transferEncoding != _headers.end()) {
 		if (transferEncoding->second != "chunked")
 			throw HttpStatus(501);
 		_isChunked = true;
+		_bodyNecessary = true;
 	}
 	if (!_bodyNecessary)
 		_isValid = true;
@@ -364,7 +362,7 @@ Request::Request(const ServerConfig& config) : _config(config)
 	_body = "";
 	_haveRequest = false;
 	_haveHeader = false;
-	_bodyNecessary = true;
+	_bodyNecessary = false;
 	_haveBody = false;
 	_haveTrailers = false;
 	_isChunked = false;
