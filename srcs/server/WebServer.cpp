@@ -220,6 +220,7 @@ void	WebServer::readCgiOutput(int clientFd, Client& currentClient, CgiHandler& c
 		return;
 	while (true)
 	{
+		memset(buffer, 0, 4096);
 		bytesRead = read(cgi.pipeReadFd, buffer, sizeof(buffer));
 		if (bytesRead > 0)
 		{
@@ -233,11 +234,14 @@ void	WebServer::readCgiOutput(int clientFd, Client& currentClient, CgiHandler& c
 			finalizeCgiResponse(clientFd, currentClient, cgi);
 			break;
 		}
-		abortCgi(clientFd, cgi);
-		HttpStatus	status(500);
-		failedRequest(status, currentClient);
-		switchToWrite(clientFd);
-		break;
+		if (buffer[0])
+		{
+			abortCgi(clientFd, cgi);
+			HttpStatus	status(500);
+			failedRequest(status, currentClient);
+			switchToWrite(clientFd);
+			break;
+		}
 	}
 }
 
