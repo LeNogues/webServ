@@ -312,6 +312,7 @@ void WebServer::init()
 		if (listen(serverFd, SOMAXCONN) < 0)
 			errorInit("ERROR: listen failed for ", _servers[i]._serverName[0], serverFd);
 
+		_socketFd.push_back(serverFd);
 		struct epoll_event event = {};
 		event.events = EPOLLIN;
 		event.data.fd = serverFd;
@@ -325,12 +326,12 @@ void WebServer::init()
 void	WebServer::cleanup()
 {
 	std::map<int, Client>::iterator	it_cli = _clients.begin();
-	std::vector<ServerConfig>::iterator it_serv = _servers.begin();
+	std::vector<int>::iterator it_serv = _socketFd.begin();
 
 	for (; it_cli != _clients.end(); it_cli++)
 		close(it_cli->second._clientFd);
-	for (; it_serv != _server.end(); it_serv++)
-		close(it_serv->
+	for (; it_serv != _socketFd.end(); it_serv++)
+		close(*it_serv);
 	close(_epollFD);
 }
 

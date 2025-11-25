@@ -24,7 +24,6 @@
 # include "../httpGen/generateAutoIndex.hpp"
 # include "../utils/setNonBlocking.hpp"
 # include "../config/ServerConfig.hpp"
-# include "handleFunction/handleCgi.hpp"
 # include "../utils/converters.hpp"
 # include "../utils/parsePath.hpp"
 # include "../request/Request.hpp"
@@ -66,6 +65,7 @@ class WebServer
 		int									_epollFD;
 		std::string							_selfPath;
 		std::vector<std::string>			_envp;
+		std::vector<int>					_socketFd;
 
 		void	handleNewConnection(int currentFd, const ServerConfig& config);
 		void	setServerAdress(const int& serverFd, sockaddr_in& serverAdress, size_t i);
@@ -87,6 +87,7 @@ class WebServer
 		void	abortCgi(int clientFd, CgiHandler& cgi);
 		void	detachPipeFd(int fd);
 		void	checkCgiTimeouts();
+		void	CreateEnvAndExecute(Client &currentClient, std::vector<std::string> &env);
 
 	public:
 		void	init();
