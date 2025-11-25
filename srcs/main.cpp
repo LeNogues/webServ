@@ -23,24 +23,26 @@ int	main(int argc, char **argv, char **envp)
 {
 	signal(SIGINT, signalFunction);
 	signal(SIGQUIT, signalFunction);
+	if (argc != 2)
+		return (std::cerr << "ERROR: wrong number of arguments\n", 1);
+	Config configs(argv[1]);
+	const std::vector<ServerConfig>& serversConfigs = configs.getServers();
+	WebServer webServer(serversConfigs, envp);
 	try {
-		if (argc != 2)
-			throw std::runtime_error("ERROR: wrong number of arguments");
-		Config configs(argv[1]);
-		const std::vector<ServerConfig>& serversConfigs = configs.getServers();
-			// 2.Create one WebServer object that manages all the servers
-			WebServer webServer(serversConfigs, envp);
-			// 3. Initialize the listening sockets
-			webServer.init();
-			// 4. Launch the main event loop
-			webServer.run();
+		// 3. Initialize the listening sockets
+		webServer.init();
+		// 4. Launch the main event loop
+		webServer.run();
+		// 5. Cleanup resources
+		webServer.cleanup();
 	} catch(const WebServer::signalException& e) {
-			std::cerr << e.what() << '\n';
-			return 1;
-	} catch(const std::exception& e)
-	{
-			std::cerr << e.what() << '\n';
-			return 1;
+		webServer.cleanup();
+		std::cerr << e.what() << '\n';
+		return 1;
+	} catch(const std::exception& e) {
+		webServer.cleanup();
+		std::cerr << e.what() << '\n';
+		return 1;
 	}
 	return 0;
 }

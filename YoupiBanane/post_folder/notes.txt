@@ -1,0 +1,22 @@
+git add 
+
+git commit 
+
+git push
+
+git pull (git fetch + git merge)
+
+git branch
+
+git switch
+
+
+
+TO PULL A REMOTE BRONCH TO THE LOCAL
+	git switch -c <branchname> origin/<branchname>
+
+TO PUSH A LOCAL BRANCH TO THE REMOTE
+	git push -u origin <branchname>
+
+TO SET A REMOTE FOR A REPO
+	git remote add origin <repo-url>

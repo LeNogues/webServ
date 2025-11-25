@@ -66,7 +66,7 @@ static char	**createEnv(Client& currentClient, std::vector<std::string> env)
 	return (envp);
 }
 
-void	CreateEnvAndExecute(Client &currentClient, std::vector<std::string> &env)
+void	WebServer::CreateEnvAndExecute(Client &currentClient, std::vector<std::string> &env)
 {
 	std::string	scriptPath;
 	const char	*pathToScript;
@@ -78,6 +78,7 @@ void	CreateEnvAndExecute(Client &currentClient, std::vector<std::string> &env)
 	scriptPath = currentClient.getRequest().getPath();
 	pathToScript = scriptPath.c_str();
 	envp = createEnv(currentClient, env);
+	cleanup();
 	if (scriptPath.find(".php") != std::string::npos)
 	{
 		phpArgv[0] = "/usr/bin/php-cgi";
@@ -137,10 +138,12 @@ void	WebServer::handleCgiRequest(Client& currentClient)
 		if (dup2(pipeIn[0], STDIN_FILENO) == -1 || dup2(pipeOut[1], STDOUT_FILENO) == -1)
 		{
 			closePipe(pipeOut, pipeIn);
+			cleanup();
 			exit(EXIT_FAILURE);
 		}
 		closePipe(pipeOut, pipeIn);
 		CreateEnvAndExecute(currentClient, _envp);
+		cleanup();
 		exit(EXIT_FAILURE);
 	}
 	close(pipeOut[1]);
