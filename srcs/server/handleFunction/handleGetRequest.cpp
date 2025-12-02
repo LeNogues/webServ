@@ -48,6 +48,8 @@ void	handleGetRequest(Client &currentClient)
 	path = currentClient.getRequest().getPath();
 	if (stat(path.c_str(), &info) == -1)
 		throw HttpStatus(404);
+	if (access(path.c_str(), R_OK) == -1)
+		throw HttpStatus(403);
 	if (S_ISDIR(info.st_mode)) {
 		getFromDir(currentClient, path);
 	} else if (S_ISREG(info.st_mode)) {
