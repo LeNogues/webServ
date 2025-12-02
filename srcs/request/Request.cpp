@@ -85,11 +85,6 @@ void Request::addMethod(const std::string&  word)
 {
 	if (word != "GET" && word != "POST" && word != "DELETE")
 		throw HttpStatus(501);
-	std::cout << "word: " << word << std::endl;
-	std::cout << "location._allowedMethods: ";
-	for (std::vector<std::string>::const_iterator it = _location._allowedMethods.begin(); it != _location._allowedMethods.end(); ++it)
-		std::cout << *it << " ";
-	std::cout << std::endl;
 	if (std::find(_location._allowedMethods.begin(), _location._allowedMethods.end(), word) == _location._allowedMethods.end())
 		throw HttpStatus(405);
 	_method = word;
