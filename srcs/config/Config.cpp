@@ -26,7 +26,7 @@ Config::Config()
     defaultConfig._root = "./default";
     defaultConfig._defaultFile = "index.html";
     defaultConfig._autoIndex = false;
-    
+
     defaultConfig._allowedMethods.push_back("GET");
     defaultConfig._allowedMethods.push_back("HEAD");
 
@@ -48,7 +48,7 @@ Config::Config(const std::string& ConfigFilePath)
 		if (server._root.empty())
 			server._root = "/var/www/html";
 		if (server._defaultFile.empty())
-			server._defaultFile = "indx.html";
+			server._defaultFile = "index.html";
 		if (server._allowedMethods.empty()) {
 			server._allowedMethods.push_back("GET");
 			server._allowedMethods.push_back("HEAD");
@@ -170,13 +170,17 @@ static void addMaxSize(std::vector<std::string>& tokens, CommonConfig& newConfig
 	newConfig._maxSizeBody = maxSize;
 }
 
+#include <cstdlib>
+
 static void addRoot(std::vector<std::string>& tokens, CommonConfig& newConfig)
 {
 	if (tokens.size() != 2)
 		throw std::runtime_error("ERROR: 'root' directive needs one argument.");
 	newConfig._root = tokens[1];
-	if (newConfig._root.empty() || newConfig._root[0] != '/')
+	if (newConfig._root.empty() || (newConfig._root[0] != '/' && newConfig._root[0] != '.'))
 		throw std::runtime_error("ERROR: 'root' directive needs a valid path.");
+	if (newConfig._root[0] != '/')
+		newConfig._root = std::string(std::getenv("PWD")) + '/' + newConfig._root;
 }
 
 static void addAutoIndex(std::vector<std::string>& tokens, CommonConfig& newConfig)
@@ -261,8 +265,10 @@ static void addAlias(std::vector<std::string>& tokens, const std::string& parent
 	if (tokens.size() != 2)
 		throw std::runtime_error("ERROR: 'alias' directive needs one argument.");
 	newLocationConfig._alias = std::make_pair(parentPath, tokens[1]);
-	if (newLocationConfig._alias.second.empty() || newLocationConfig._alias.second[0] != '/')
+	if (newLocationConfig._alias.second.empty() || (newLocationConfig._alias.second[0] != '/' && newLocationConfig._alias.second[0] != '.'))
 		throw std::runtime_error("ERROR: 'alias' directive needs a valid path.");
+	if (newLocationConfig._alias.second[0] != '/')
+		newLocationConfig._alias.second = std::string(std::getenv("PWD")) + '/' + newLocationConfig._alias.second;
 }
 
 static void addServerToken(std::vector<std::string>& tokens, ServerConfig& newServerConfig)

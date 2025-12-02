@@ -103,7 +103,7 @@ void WebServer::handleClientRead(int currentFd)
 				if (bytes_read == 0)
 					std::cout << "Client on fd " << currentFd << " closed the connection." << std::endl;
 				else
-					writeError("Error: recv() failed for fd: " + intToString(currentFd));
+					return;
 				handleClientDisconnection(currentFd);
 				return;
 			}

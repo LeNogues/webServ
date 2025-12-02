@@ -33,7 +33,7 @@ int	main(int argc, char **argv, char **envp)
 			Config tmp(argv[1]);
 			configs = tmp;
 		}
-			
+
 		const std::vector<ServerConfig>& serversConfigs = configs.getServers();
 		WebServer webServer(serversConfigs, envp);
 		try {
@@ -61,7 +61,7 @@ int	main(int argc, char **argv, char **envp)
 	{
 		std::cerr << e.what() << '\n';
 	}
-	
+
 
 	return 0;
 }
