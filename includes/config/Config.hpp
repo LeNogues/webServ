@@ -26,6 +26,7 @@ class Config
 	private:
 		std::vector<ServerConfig>	_servers;
 	public:
+		Config();
 		Config(const std::string& configFilePath);
 		~Config();
 		Config(const Config& other);

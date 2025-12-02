@@ -16,6 +16,23 @@ static LocationConfig parseLocationBlock(std::ifstream& configFile, const std::s
 
 #pragma region Cannonical Class
 
+Config::Config()
+{
+    ServerConfig defaultConfig;
+
+    defaultConfig._listenOn = std::make_pair("0.0.0.0", 8080);
+
+    defaultConfig._serverName.push_back("localhost");
+    defaultConfig._root = "./default";
+    defaultConfig._defaultFile = "index.html";
+    defaultConfig._autoIndex = false;
+    
+    defaultConfig._allowedMethods.push_back("GET");
+    defaultConfig._allowedMethods.push_back("HEAD");
+
+    this->_servers.push_back(defaultConfig);
+}
+
 Config::Config(const std::string& ConfigFilePath)
 {
 	if (ConfigFilePath[ConfigFilePath.size() - 1] != 'f')

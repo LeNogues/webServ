@@ -1,0 +1,141 @@
+:root {
+	--color-bg: #f0f0f0;
+	--color-text: #333;
+	--color-muted: #555;
+	--color-primary: #007bff;
+	--color-primary-hover: #0056b3;
+	--color-primary-active: #004494;
+	--color-footer-bg: #2c3e50;
+	--color-footer-text: #ecf0f1;
+	--shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1);
+	--shadow-md: 0 6px 8px rgba(0, 0, 0, 0.15);
+	--radius: 10px;
+	--gap: 1rem;
+}
+
+body {
+	min-height: 100svh;
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	font-family: Arial, sans-serif;
+	background-color: var(--color-bg);
+}
+
+h1 {
+	color: var(--color-text);
+	text-align: center;
+}
+
+h3 {
+	margin: 0.5rem 0;
+}
+
+p {
+	color: var(--color-muted);
+	margin: 0.3rem 0;
+}
+
+main {
+	flex: 1 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+	padding: 2rem;
+}
+
+footer {
+	margin-top: auto;
+	width: 100%;
+	background-color: var(--color-footer-bg);
+	color: var(--color-footer-text);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 -4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.collaborator {
+	display: flex;
+	gap: var(--gap);
+	justify-content: center;
+	border: 2px solid lightgray;
+	padding: 1rem;
+	margin-top: 2rem;
+}
+
+.collaborator h2 a {
+    color: inherit;
+}
+
+.cards-zone {
+	margin-top: 2rem;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2rem;
+	justify-content: center;
+}
+
+.card {
+	border: 2px solid black;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: flex-start;
+	gap: 1rem;
+	width: 20rem;
+	height: 20rem;
+	border-radius: var(--radius);
+	padding: 1rem;
+}
+
+.card p {
+	color: black;
+}
+
+.card__title {
+	color: var(--color-primary);
+}
+
+.card__desc {
+	color: black;
+}
+
+#formUpload {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: center;
+	gap: 1rem;
+}
+
+.status {
+	padding-top: 1rem;
+}
+
+.btn {
+	background-color: var(--color-primary);
+	color: white;
+	margin: 1rem 0;
+	border: none;
+	border-radius: 8px;
+	padding: 12px 24px;
+	font-size: 16px;
+	font-weight: bold;
+	font-family: Arial, sans-serif;
+	cursor: pointer;
+	box-shadow: var(--shadow-sm);
+	transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+	background-color: var(--color-primary-hover);
+	box-shadow: var(--shadow-md);
+	transform: translateY(-2px);
+}
+
+.btn:active {
+	background-color: var(--color-primary-active);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	transform: translateY(0);
+}
